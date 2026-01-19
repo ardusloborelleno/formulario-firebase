@@ -2,129 +2,227 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Mini Dashboard de Ingresos y Gastos</title>
+  <title>Dashboard Moderno de Finanzas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      padding: 0 10px;
-      max-width: 800px;
+    /* RESET & TIPOGRAFÍA */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
     }
+
+    body {
+      background-color: #f5f7fa;
+      padding: 20px;
+    }
+
     h1 {
       text-align: center;
       margin-bottom: 20px;
+      color: #333;
     }
 
-    /* Dashboard tarjetas */
+    /* DASHBOARD */
     .dashboard {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .tarjeta {
-      flex: 1 1 calc(33% - 10px);
-      min-width: 120px;
-      background-color: #f8f8f8;
-      border-radius: 10px;
-      padding: 15px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    .tarjeta.ingreso {
-      background-color: #28a745;
-    }
-    .tarjeta.gasto {
-      background-color: #dc3545;
-    }
-    .tarjeta.saldo {
-      background-color: #007bff;
+      gap: 15px;
+      margin-bottom: 25px;
     }
 
-    /* Formulario */
-    form {
+    .tarjeta {
+      flex: 1 1 calc(33% - 10px);
+      min-width: 150px;
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 20px;
       text-align: center;
-      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    input {
-      padding: 10px;
-      font-size: 16px;
+
+    .tarjeta:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .tarjeta .titulo {
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .tarjeta .valor {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .tarjeta.ingreso .valor {
+      color: #28a745;
+    }
+    .tarjeta.gasto .valor {
+      color: #dc3545;
+    }
+    .tarjeta.saldo .valor {
+      color: #007bff;
+    }
+
+    /* FORMULARIO */
+    form {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    input[type="number"] {
       width: 70%;
-      max-width: 300px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 10px 20px;
+      max-width: 250px;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      transition: border 0.2s, box-shadow 0.2s;
       font-size: 16px;
-      cursor: pointer;
-      margin: 5px;
     }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0,123,255,0.3);
+    }
+
+    /* BOTONES */
     .boton-seleccion {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       flex-wrap: wrap;
     }
+
     .boton-seleccion button {
       flex: 1 1 100px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background-color: #e0e0e0;
+      color: #333;
+      font-weight: 500;
+      transition: background-color 0.2s, transform 0.2s;
     }
+
     .boton-seleccion button.active {
       background-color: #007bff;
-      color: white;
+      color: #fff;
+      transform: scale(1.05);
     }
 
-    /* Lista movimientos */
+    .boton-seleccion button:hover:not(.active) {
+      background-color: #d0d0d0;
+    }
+
+    button[type="submit"] {
+      background-color: #007bff;
+      color: #fff;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0056b3;
+      transform: translateY(-2px);
+    }
+
+    /* LISTA MOVIMIENTOS */
     ul {
-      list-style-type: none;
+      list-style: none;
       padding: 0;
     }
+
     li {
-      margin-bottom: 5px;
-      padding: 8px;
-      border-radius: 5px;
-      color: white;
-      font-weight: bold;
+      background-color: #fff;
+      margin-bottom: 10px;
+      padding: 12px 15px;
+      border-radius: 10px;
       display: flex;
       justify-content: space-between;
-      word-wrap: break-word;
-    }
-    li.ingreso {
-      background-color: #28a745;
-    }
-    li.gasto {
-      background-color: #dc3545;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    /* Responsive */
+    li:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    }
+
+    li.ingreso {
+      border-left: 6px solid #28a745;
+    }
+    li.gasto {
+      border-left: 6px solid #dc3545;
+    }
+
+    li .monto {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    li .fecha {
+      font-size: 12px;
+      color: #666;
+      margin-left: 10px;
+    }
+
+    /* RESPONSIVE */
     @media (max-width: 600px) {
       .dashboard {
         flex-direction: column;
-        gap: 10px;
       }
       .tarjeta {
         flex: 1 1 100%;
+      }
+      input[type="number"] {
+        width: 90%;
       }
     }
   </style>
 </head>
 <body>
 
-  <h1>Mini Dashboard de Ingresos y Gastos</h1>
+  <h1>Dashboard Moderno de Finanzas</h1>
 
-  <!-- Tarjetas -->
+  <!-- DASHBOARD -->
   <div class="dashboard">
-    <div class="tarjeta ingreso" id="totalIngresos">Ingresos: COP 0</div>
-    <div class="tarjeta gasto" id="totalGastos">Gastos: COP 0</div>
-    <div class="tarjeta saldo" id="saldoActual">Saldo: COP 0</div>
+    <div class="tarjeta ingreso">
+      <div class="titulo">Ingresos</div>
+      <div class="valor" id="totalIngresos">COP 0</div>
+    </div>
+    <div class="tarjeta gasto">
+      <div class="titulo">Gastos</div>
+      <div class="valor" id="totalGastos">COP 0</div>
+    </div>
+    <div class="tarjeta saldo">
+      <div class="titulo">Saldo</div>
+      <div class="valor" id="saldoActual">COP 0</div>
+    </div>
   </div>
 
-  <!-- Formulario -->
+  <!-- FORMULARIO -->
   <form id="formulario">
     <div class="boton-seleccion">
       <button type="button" id="btnIngreso" class="active">Ingreso</button>
@@ -143,7 +241,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <script>
-    // Configuración Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
       authDomain: "formulario-github.firebaseapp.com",
@@ -153,12 +250,9 @@
       appId: "1:39497359534:web:463c4e3d202c6d5dd78d3f"
     };
 
-    // Inicializar Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    console.log("Firebase inicializado correctamente");
 
-    // Variables tipo de movimiento
     let tipoMovimiento = "Ingreso";
     const btnIngreso = document.getElementById("btnIngreso");
     const btnGasto = document.getElementById("btnGasto");
@@ -174,31 +268,24 @@
       btnIngreso.classList.remove("active");
     });
 
-    // Capturar formulario
     const formulario = document.getElementById("formulario");
-    formulario.addEventListener("submit", function(e) {
+    formulario.addEventListener("submit", (e) => {
       e.preventDefault();
       const monto = parseFloat(document.getElementById("monto").value);
-      if (isNaN(monto) || monto <= 0) {
-        alert("Por favor ingrese un monto válido.");
-        return;
-      }
-      // Guardar en Firestore
+      if (isNaN(monto) || monto <= 0) return alert("Ingrese un monto válido");
+
       db.collection("movimientos").add({
         tipoMovimiento: tipoMovimiento,
-        monto: monto,
+        monto,
         fecha: new Date()
       }).then(() => {
         formulario.reset();
         tipoMovimiento = "Ingreso";
         btnIngreso.classList.add("active");
         btnGasto.classList.remove("active");
-      }).catch((error) => {
-        console.error("Error al guardar los datos:", error);
-      });
+      }).catch(console.error);
     });
 
-    // Mostrar movimientos y calcular totales
     function mostrarMovimientos() {
       const lista = document.getElementById("listaMovimientos");
       const totalIngresosDiv = document.getElementById("totalIngresos");
@@ -211,23 +298,27 @@
           lista.innerHTML = "";
           let totalIngresos = 0;
           let totalGastos = 0;
+
           snapshot.forEach((doc) => {
             const data = doc.data();
             const li = document.createElement("li");
             li.classList.add(data.tipoMovimiento.toLowerCase());
-            li.textContent = `${data.tipoMovimiento} - COP ${data.monto.toLocaleString()}`;
+
+            const fecha = new Date(data.fecha.toDate());
+            li.innerHTML = `
+              <span class="monto">${data.tipoMovimiento} - COP ${data.monto.toLocaleString()}</span>
+              <span class="fecha">${fecha.toLocaleString()}</span>
+            `;
             lista.appendChild(li);
 
-            if (data.tipoMovimiento === "Ingreso") {
-              totalIngresos += data.monto;
-            } else {
-              totalGastos += data.monto;
-            }
+            if (data.tipoMovimiento === "Ingreso") totalIngresos += data.monto;
+            else totalGastos += data.monto;
           });
+
           const saldo = totalIngresos - totalGastos;
-          totalIngresosDiv.textContent = `Ingresos: COP ${totalIngresos.toLocaleString()}`;
-          totalGastosDiv.textContent = `Gastos: COP ${totalGastos.toLocaleString()}`;
-          saldoDiv.textContent = `Saldo: COP ${saldo.toLocaleString()}`;
+          totalIngresosDiv.textContent = `COP ${totalIngresos.toLocaleString()}`;
+          totalGastosDiv.textContent = `COP ${totalGastos.toLocaleString()}`;
+          saldoDiv.textContent = `COP ${saldo.toLocaleString()}`;
         });
     }
 
