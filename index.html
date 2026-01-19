@@ -3,16 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <title>Formulario Firebase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    form {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 70%;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background: #f0f0f0;
+      margin-bottom: 5px;
+      padding: 8px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
 
-  <h1>Formulario de prueba</h1>
+  <h1>Formulario Firebase</h1>
 
   <form id="formulario">
     <input type="text" id="nombre" placeholder="Nombre" required>
-    <br><br>
+    <br>
     <button type="submit">Enviar</button>
   </form>
+
+  <h2>Usuarios registrados</h2>
+  <ul id="listaUsuarios"></ul>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -34,12 +73,13 @@
     const db = firebase.firestore();
     console.log("Firebase inicializado correctamente");
 
-    // Evento submit
+    // Capturar formulario
     const formulario = document.getElementById("formulario");
     formulario.addEventListener("submit", function(e) {
       e.preventDefault();
       const nombre = document.getElementById("nombre").value;
 
+      // Guardar en Firestore
       db.collection("usuarios").add({
         nombre: nombre,
         fecha: new Date()
@@ -52,6 +92,26 @@
         console.error("Error al guardar los datos:", error);
       });
     });
+
+    // Función para mostrar usuarios en tiempo real
+    function mostrarUsuarios() {
+      const lista = document.getElementById("listaUsuarios");
+
+      db.collection("usuarios")
+        .orderBy("fecha", "desc")
+        .onSnapshot((snapshot) => {
+          lista.innerHTML = ""; // limpiar lista
+          snapshot.forEach((doc) => {
+            const li = document.createElement("li");
+            const fecha = doc.data().fecha.toDate();
+            li.textContent = `${doc.data().nombre} - ${fecha.toLocaleString()}`;
+            lista.appendChild(li);
+          });
+        });
+    }
+
+    // Llamar función al cargar la página
+    mostrarUsuarios();
   </script>
 
 </body>
