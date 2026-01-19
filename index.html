@@ -1,39 +1,23 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Formulario Firebase</title>
-</head>
-<body>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-  <h1>Formulario de prueba</h1>
+<script>
+  // 🔥 TU CONFIGURACIÓN
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
+    authDomain: "formulario-github.firebaseapp.com",
+    projectId: "formulario-github",
+    storageBucket: "formulario-github.firebasestorage.app",
+    messagingSenderId: "39497359534",
+    appId: "1:39497359534:web:463c4e3d202c6d5dd78d3f"
+  };
 
-  <form id="formulario">
-    <input type="text" id="nombre" placeholder="Nombre" required>
-    <br><br>
-    <button type="submit">Enviar</button>
-  </form>
+  // Inicializar Firebase
+  firebase.initializeApp(firebaseConfig);
 
-  <!-- Firebase SDK -->
-  <script type="module">
-    // Importar Firebase desde CDN
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  // Inicializar Firestore
+  const db = firebase.firestore();
 
-    // 🔥 TU CONFIGURACIÓN (la que ya tienes)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
-      authDomain: "formulario-github.firebaseapp.com",
-      projectId: "formulario-github",
-      storageBucket: "formulario-github.firebasestorage.app",
-      messagingSenderId: "39497359534",
-      appId: "1:39497359534:web:463c4e3d202c6d5dd78d3f"
-    };
-
-    // Inicializar Firebase
-    const app = initializeApp(firebaseConfig);
-
-    console.log("Firebase inicializado correctamente");
-  </script>
-
-</body>
-</html>
+  console.log("Firebase inicializado correctamente");
+</script>
