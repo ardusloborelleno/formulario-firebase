@@ -5,165 +5,72 @@
 <title>MARSOL · Control de Gastos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
+body{background:#f2f4f8;padding:20px;color:#1c1c1e}
+h1{text-align:center;margin-bottom:20px}
 
-body{
-  background:linear-gradient(180deg,#f2f4f8,#ffffff);
-  padding:20px;
-  color:#1c1c1e;
-}
-
-/* ---------- TITULO ---------- */
-h1{
-  text-align:center;
-  margin-bottom:25px;
-  font-weight:700;
-}
-
-/* ---------- DASHBOARD ---------- */
 .dashboard{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:15px;
-  margin-bottom:30px;
+  gap:15px;margin-bottom:25px
 }
-
 .card{
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-  color:#fff;
+  border-radius:20px;padding:20px;color:#fff;
+  box-shadow:0 10px 25px rgba(0,0,0,.08)
 }
+.ingreso{background:linear-gradient(135deg,#34c759,#2ecc71)}
+.gasto{background:linear-gradient(135deg,#ff3b30,#ff6b6b)}
+.saldo{background:linear-gradient(135deg,#007aff,#5ac8fa)}
 
-.card.ingreso{background:linear-gradient(135deg,#34c759,#2ecc71)}
-.card.gasto{background:linear-gradient(135deg,#ff3b30,#ff6b6b)}
-.card.saldo{background:linear-gradient(135deg,#007aff,#5ac8fa)}
-
-.card span{
-  font-size:13px;
-  opacity:.9;
-}
-.card h2{
-  margin-top:10px;
-  font-size:22px;
-}
-
-/* ---------- FORMULARIO ---------- */
 form{
-  background:#fff;
-  border-radius:22px;
-  padding:25px;
-  box-shadow:0 15px 30px rgba(0,0,0,.08);
-  margin-bottom:30px;
+  background:#fff;border-radius:20px;padding:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:25px
 }
 
-.segmented{
-  display:flex;
-  background:#f2f2f7;
-  border-radius:14px;
-  overflow:hidden;
-  margin-bottom:20px;
-}
-
+.segmented{display:flex;background:#eee;border-radius:14px;margin-bottom:15px}
 .segmented button{
-  flex:1;
-  padding:12px;
-  border:none;
-  background:none;
-  font-weight:600;
-  cursor:pointer;
+  flex:1;border:none;padding:12px;
+  background:none;font-weight:600;cursor:pointer
 }
+.segmented .active{background:#007aff;color:#fff}
 
-.segmented button.active{
-  background:#007aff;
-  color:#fff;
+input,select,textarea{
+  width:100%;padding:14px;border-radius:14px;
+  border:1px solid #ccc;margin-bottom:12px
 }
-
-.field{
-  margin-bottom:15px;
-}
-
-input,textarea{
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  border:1px solid #ddd;
-  font-size:15px;
-}
-
-textarea{resize:none}
 
 .increment{
-  margin-top:10px;
-  background:#e5f0ff;
-  color:#007aff;
-  border:none;
-  padding:10px;
-  border-radius:12px;
-  cursor:pointer;
-  font-weight:600;
+  background:#e5f0ff;color:#007aff;
+  border:none;padding:10px;border-radius:12px;
+  cursor:pointer;font-weight:600;margin-bottom:12px
 }
 
 .submit{
-  width:100%;
-  margin-top:15px;
+  width:100%;padding:14px;
+  border:none;border-radius:16px;
   background:linear-gradient(135deg,#007aff,#5ac8fa);
-  color:#fff;
-  border:none;
-  padding:14px;
-  border-radius:16px;
-  font-size:16px;
-  font-weight:600;
-  cursor:pointer;
+  color:#fff;font-weight:600;font-size:16px
 }
 
-/* ---------- AUTOCOMPLETE ---------- */
-.autocomplete{
-  position:relative;
-}
-.autocomplete-list{
-  position:absolute;
-  background:#fff;
-  width:100%;
-  max-height:180px;
-  overflow:auto;
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,.12);
-  z-index:10;
-}
-.autocomplete-item{
-  padding:10px;
-  cursor:pointer;
-}
-.autocomplete-item:hover{
-  background:#f2f2f7;
-}
-
-/* ---------- GRAFICO ---------- */
 canvas{
-  background:#fff;
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 15px 30px rgba(0,0,0,.08);
-  margin-bottom:30px;
+  background:#fff;border-radius:20px;
+  padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:25px
 }
 
-/* ---------- HISTORICO ---------- */
 ul{list-style:none}
 li{
-  background:#fff;
-  border-radius:16px;
-  padding:15px;
-  margin-bottom:10px;
-  box-shadow:0 8px 20px rgba(0,0,0,.06);
+  background:#fff;border-radius:16px;
+  padding:15px;margin-bottom:10px;
+  box-shadow:0 5px 15px rgba(0,0,0,.06)
 }
 li.ingreso{border-left:5px solid #34c759}
 li.gasto{border-left:5px solid #ff3b30}
-
 small{color:#666}
 </style>
 </head>
@@ -179,124 +86,116 @@ small{color:#666}
 </div>
 
 <form id="formulario">
-
   <div class="segmented">
     <button type="button" id="btnIngreso" class="active">Ingreso</button>
     <button type="button" id="btnGasto">Gasto</button>
   </div>
 
-  <div class="field">
-    <input type="number" id="monto" placeholder="Monto COP">
-    <button type="button" class="increment" id="add100">+ 100.000</button>
-  </div>
+  <input type="number" id="monto" placeholder="Monto COP">
+  <button type="button" class="increment" id="add100">+ 100.000</button>
 
-  <div class="field autocomplete">
-    <input type="text" id="categoria" placeholder="Categoría">
-    <div class="autocomplete-list" id="listaCategorias"></div>
-  </div>
+  <select id="catNivel1">
+    <option value="">Categoría principal</option>
+  </select>
 
-  <div class="field">
-    <textarea id="observacion" rows="3" placeholder="Observaciones (opcional)"></textarea>
-  </div>
+  <select id="catNivel2">
+    <option value="">Subcategoría</option>
+  </select>
 
-  <button class="submit">Registrar movimiento</button>
+  <textarea id="observacion" rows="3" placeholder="Observaciones (opcional)"></textarea>
+
+  <button class="submit">Registrar</button>
 </form>
 
 <canvas id="grafico"></canvas>
 
 <ul id="listaMovimientos"></ul>
 
-<!-- FIREBASE -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig={
+firebase.initializeApp({
   apiKey:"AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
   authDomain:"formulario-github.firebaseapp.com",
   projectId:"formulario-github"
-};
-firebase.initializeApp(firebaseConfig);
+});
 const db=firebase.firestore();
 
 /* ---------- CATEGORIAS ---------- */
-const categorias=[
-"Arriendo","Cuota apartamento","Energía eléctrica","Agua","Gas","Internet",
-"Carnes y proteínas","Mercado mensual","Frutas y verduras","Lácteos","Panadería",
-"Bebidas","Snacks","Comidas fuera","Gasolina","Transporte público","Taxi / apps",
-"Ropa","Calzado","Aseo personal","Medicamentos","Consultas médicas",
-"Educación","Cine","Viajes","Restaurantes","Tarjetas de crédito",
-"Ahorro","Inversiones","Gastos no clasificados"
-];
-
-const inputCat=document.getElementById("categoria");
-const listCat=document.getElementById("listaCategorias");
-
-inputCat.addEventListener("input",()=>{
-  listCat.innerHTML="";
-  categorias.filter(c=>c.toLowerCase().includes(inputCat.value.toLowerCase()))
-  .forEach(c=>{
-    const div=document.createElement("div");
-    div.className="autocomplete-item";
-    div.textContent=c;
-    div.onclick=()=>{inputCat.value=c;listCat.innerHTML="";}
-    listCat.appendChild(div);
-  });
-});
-
-/* ---------- MONTO ---------- */
-document.getElementById("add100").onclick=()=>{
-  const m=document.getElementById("monto");
-  m.value=(parseInt(m.value||0)+100000);
+const categorias={
+  "Servicios":["Agua","Energía","Gas","Internet","Telefonía"],
+  "Mercado":["Carnes","Frutas","Lácteos","Panadería","Bebidas"],
+  "Transporte":["Gasolina","Transporte público","Taxi","Moto"],
+  "Salud":["Medicamentos","Consultas","Exámenes"],
+  "Educación":["Matrículas","Diplomados"],
+  "Ocio":["Cine","Viajes","Restaurantes"],
+  "Finanzas":["Tarjetas","Préstamos","Ahorro"],
+  "Otros":["No clasificado"]
 };
 
-/* ---------- INGRESO / GASTO ---------- */
+const cat1=document.getElementById("catNivel1");
+const cat2=document.getElementById("catNivel2");
+
+Object.keys(categorias).forEach(c=>{
+  cat1.innerHTML+=`<option>${c}</option>`;
+});
+
+cat1.onchange=()=>{
+  cat2.innerHTML='<option value="">Subcategoría</option>';
+  categorias[cat1.value]?.forEach(s=>{
+    cat2.innerHTML+=`<option>${s}</option>`;
+  });
+};
+
+/* ---------- UI ---------- */
 let tipo="Ingreso";
 btnIngreso.onclick=()=>{tipo="Ingreso";btnIngreso.classList.add("active");btnGasto.classList.remove("active")}
 btnGasto.onclick=()=>{tipo="Gasto";btnGasto.classList.add("active");btnIngreso.classList.remove("active")}
+add100.onclick=()=>monto.value=(parseInt(monto.value||0)+100000);
 
 /* ---------- REGISTRO ---------- */
 formulario.onsubmit=e=>{
   e.preventDefault();
   db.collection("movimientos").add({
     tipo,
-    monto:parseInt(monto.value),
-    categoria:categoria.value,
+    monto:Number(monto.value),
+    categoria1:cat1.value,
+    categoria2:cat2.value,
     observacion:observacion.value,
     fecha:new Date()
   });
   formulario.reset();
-}
+};
 
 /* ---------- GRAFICO ---------- */
-const ctx=document.getElementById("grafico");
-const chart=new Chart(ctx,{
+const chart=new Chart(grafico,{
   type:"line",
   data:{labels:[],datasets:[
     {label:"Ingresos",data:[],borderColor:"#34c759"},
     {label:"Gastos",data:[],borderColor:"#ff3b30"}
-  ]},
-  options:{responsive:true}
+  ]}
 });
 
 /* ---------- CONSULTA ---------- */
 db.collection("movimientos").orderBy("fecha","desc")
 .onSnapshot(snap=>{
   let ing=0,gas=0;
-  let map={};
+  const map={};
   listaMovimientos.innerHTML="";
 
   snap.forEach(d=>{
     const x=d.data();
     const day=new Date(x.fecha.toDate()).toLocaleDateString();
     map[day]=map[day]||{i:0,g:0};
-    x.tipo==="Ingreso"?map[day].i+=x.monto:map[day].g+=x.monto;
 
-    if(x.tipo==="Ingreso")ing+=x.monto; else gas+=x.monto;
+    if(x.tipo==="Ingreso"){ing+=x.monto;map[day].i+=x.monto}
+    else{gas+=x.monto;map[day].g+=x.monto}
 
     listaMovimientos.innerHTML+=`
     <li class="${x.tipo.toLowerCase()}">
-      <strong>${x.tipo} · ${x.categoria}</strong><br>
+      <strong>${x.categoria1} · ${x.categoria2}</strong><br>
       COP ${x.monto.toLocaleString()}<br>
       <small>${x.observacion||""}</small>
     </li>`;
