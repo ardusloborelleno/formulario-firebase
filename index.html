@@ -1,329 +1,317 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Aplicación de control de gastos, MARSOL</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    /* RESET & TIPOGRAFÍA */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Roboto', sans-serif;
-    }
+<meta charset="UTF-8">
+<title>MARSOL · Control de Gastos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    body {
-      background-color: #f5f7fa;
-      padding: 20px;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
-    }
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
 
-    /* DASHBOARD */
-    .dashboard {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
+body{
+  background:linear-gradient(180deg,#f2f4f8,#ffffff);
+  padding:20px;
+  color:#1c1c1e;
+}
 
-    .tarjeta {
-      flex: 1 1 calc(33% - 10px);
-      min-width: 150px;
-      background-color: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
+/* ---------- TITULO ---------- */
+h1{
+  text-align:center;
+  margin-bottom:25px;
+  font-weight:700;
+}
 
-    .tarjeta:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-    }
+/* ---------- DASHBOARD ---------- */
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:15px;
+  margin-bottom:30px;
+}
 
-    .tarjeta .titulo {
-      font-size: 14px;
-      font-weight: 500;
-      color: #666;
-      margin-bottom: 8px;
-    }
+.card{
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  color:#fff;
+}
 
-    .tarjeta .valor {
-      font-size: 20px;
-      font-weight: 700;
-      color: #333;
-    }
+.card.ingreso{background:linear-gradient(135deg,#34c759,#2ecc71)}
+.card.gasto{background:linear-gradient(135deg,#ff3b30,#ff6b6b)}
+.card.saldo{background:linear-gradient(135deg,#007aff,#5ac8fa)}
 
-    .tarjeta.ingreso .valor {
-      color: #28a745;
-    }
-    .tarjeta.gasto .valor {
-      color: #dc3545;
-    }
-    .tarjeta.saldo .valor {
-      color: #007bff;
-    }
+.card span{
+  font-size:13px;
+  opacity:.9;
+}
+.card h2{
+  margin-top:10px;
+  font-size:22px;
+}
 
-    /* FORMULARIO */
-    form {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      margin-bottom: 25px;
-      text-align: center;
-    }
+/* ---------- FORMULARIO ---------- */
+form{
+  background:#fff;
+  border-radius:22px;
+  padding:25px;
+  box-shadow:0 15px 30px rgba(0,0,0,.08);
+  margin-bottom:30px;
+}
 
-    input[type="number"] {
-      width: 70%;
-      max-width: 250px;
-      padding: 12px 15px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-bottom: 15px;
-      transition: border 0.2s, box-shadow 0.2s;
-      font-size: 16px;
-    }
+.segmented{
+  display:flex;
+  background:#f2f2f7;
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:20px;
+}
 
-    input[type="number"]:focus {
-      outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 5px rgba(0,123,255,0.3);
-    }
+.segmented button{
+  flex:1;
+  padding:12px;
+  border:none;
+  background:none;
+  font-weight:600;
+  cursor:pointer;
+}
 
-    /* BOTONES */
-    .boton-seleccion {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
+.segmented button.active{
+  background:#007aff;
+  color:#fff;
+}
 
-    .boton-seleccion button {
-      flex: 1 1 100px;
-      padding: 12px 20px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background-color: #e0e0e0;
-      color: #333;
-      font-weight: 500;
-      transition: background-color 0.2s, transform 0.2s;
-    }
+.field{
+  margin-bottom:15px;
+}
 
-    .boton-seleccion button.active {
-      background-color: #007bff;
-      color: #fff;
-      transform: scale(1.05);
-    }
+input,textarea{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #ddd;
+  font-size:15px;
+}
 
-    .boton-seleccion button:hover:not(.active) {
-      background-color: #d0d0d0;
-    }
+textarea{resize:none}
 
-    button[type="submit"] {
-      background-color: #007bff;
-      color: #fff;
-      padding: 12px 25px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.2s;
-    }
+.increment{
+  margin-top:10px;
+  background:#e5f0ff;
+  color:#007aff;
+  border:none;
+  padding:10px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:600;
+}
 
-    button[type="submit"]:hover {
-      background-color: #0056b3;
-      transform: translateY(-2px);
-    }
+.submit{
+  width:100%;
+  margin-top:15px;
+  background:linear-gradient(135deg,#007aff,#5ac8fa);
+  color:#fff;
+  border:none;
+  padding:14px;
+  border-radius:16px;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+}
 
-    /* LISTA MOVIMIENTOS */
-    ul {
-      list-style: none;
-      padding: 0;
-    }
+/* ---------- AUTOCOMPLETE ---------- */
+.autocomplete{
+  position:relative;
+}
+.autocomplete-list{
+  position:absolute;
+  background:#fff;
+  width:100%;
+  max-height:180px;
+  overflow:auto;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.12);
+  z-index:10;
+}
+.autocomplete-item{
+  padding:10px;
+  cursor:pointer;
+}
+.autocomplete-item:hover{
+  background:#f2f2f7;
+}
 
-    li {
-      background-color: #fff;
-      margin-bottom: 10px;
-      padding: 12px 15px;
-      border-radius: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
+/* ---------- GRAFICO ---------- */
+canvas{
+  background:#fff;
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 15px 30px rgba(0,0,0,.08);
+  margin-bottom:30px;
+}
 
-    li:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-    }
+/* ---------- HISTORICO ---------- */
+ul{list-style:none}
+li{
+  background:#fff;
+  border-radius:16px;
+  padding:15px;
+  margin-bottom:10px;
+  box-shadow:0 8px 20px rgba(0,0,0,.06);
+}
+li.ingreso{border-left:5px solid #34c759}
+li.gasto{border-left:5px solid #ff3b30}
 
-    li.ingreso {
-      border-left: 6px solid #28a745;
-    }
-    li.gasto {
-      border-left: 6px solid #dc3545;
-    }
-
-    li .monto {
-      font-weight: 700;
-      font-size: 16px;
-    }
-
-    li .fecha {
-      font-size: 12px;
-      color: #666;
-      margin-left: 10px;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 600px) {
-      .dashboard {
-        flex-direction: column;
-      }
-      .tarjeta {
-        flex: 1 1 100%;
-      }
-      input[type="number"] {
-        width: 90%;
-      }
-    }
-  </style>
+small{color:#666}
+</style>
 </head>
+
 <body>
 
-  <h1>Aplicación de control de gastos, MARSOL</h1>
+<h1>MARSOL 💰</h1>
 
-  <!-- DASHBOARD -->
-  <div class="dashboard">
-    <div class="tarjeta ingreso">
-      <div class="titulo">Ingresos</div>
-      <div class="valor" id="totalIngresos">COP 0</div>
-    </div>
-    <div class="tarjeta gasto">
-      <div class="titulo">Gastos</div>
-      <div class="valor" id="totalGastos">COP 0</div>
-    </div>
-    <div class="tarjeta saldo">
-      <div class="titulo">Saldo</div>
-      <div class="valor" id="saldoActual">COP 0</div>
-    </div>
+<div class="dashboard">
+  <div class="card ingreso"><span>Ingresos</span><h2 id="totalIngresos">COP 0</h2></div>
+  <div class="card gasto"><span>Gastos</span><h2 id="totalGastos">COP 0</h2></div>
+  <div class="card saldo"><span>Saldo</span><h2 id="saldo">COP 0</h2></div>
+</div>
+
+<form id="formulario">
+
+  <div class="segmented">
+    <button type="button" id="btnIngreso" class="active">Ingreso</button>
+    <button type="button" id="btnGasto">Gasto</button>
   </div>
 
-  <!-- FORMULARIO -->
-  <form id="formulario">
-    <div class="boton-seleccion">
-      <button type="button" id="btnIngreso" class="active">Ingreso</button>
-      <button type="button" id="btnGasto">Gasto</button>
-    </div>
-    <input type="number" id="monto" placeholder="Monto (COP)" required min="0">
-    <br>
-    <button type="submit">Registrar</button>
-  </form>
+  <div class="field">
+    <input type="number" id="monto" placeholder="Monto COP">
+    <button type="button" class="increment" id="add100">+ 100.000</button>
+  </div>
 
-  <h2>Histórico de movimientos</h2>
-  <ul id="listaMovimientos"></ul>
+  <div class="field autocomplete">
+    <input type="text" id="categoria" placeholder="Categoría">
+    <div class="autocomplete-list" id="listaCategorias"></div>
+  </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <div class="field">
+    <textarea id="observacion" rows="3" placeholder="Observaciones (opcional)"></textarea>
+  </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
-      authDomain: "formulario-github.firebaseapp.com",
-      projectId: "formulario-github",
-      storageBucket: "formulario-github.firebasestorage.app",
-      messagingSenderId: "39497359534",
-      appId: "1:39497359534:web:463c4e3d202c6d5dd78d3f"
-    };
+  <button class="submit">Registrar movimiento</button>
+</form>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+<canvas id="grafico"></canvas>
 
-    let tipoMovimiento = "Ingreso";
-    const btnIngreso = document.getElementById("btnIngreso");
-    const btnGasto = document.getElementById("btnGasto");
+<ul id="listaMovimientos"></ul>
 
-    btnIngreso.addEventListener("click", () => {
-      tipoMovimiento = "Ingreso";
-      btnIngreso.classList.add("active");
-      btnGasto.classList.remove("active");
-    });
-    btnGasto.addEventListener("click", () => {
-      tipoMovimiento = "Gasto";
-      btnGasto.classList.add("active");
-      btnIngreso.classList.remove("active");
-    });
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    const formulario = document.getElementById("formulario");
-    formulario.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const monto = parseFloat(document.getElementById("monto").value);
-      if (isNaN(monto) || monto <= 0) return alert("Ingrese un monto válido");
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
+  authDomain:"formulario-github.firebaseapp.com",
+  projectId:"formulario-github"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
 
-      db.collection("movimientos").add({
-        tipoMovimiento: tipoMovimiento,
-        monto,
-        fecha: new Date()
-      }).then(() => {
-        formulario.reset();
-        tipoMovimiento = "Ingreso";
-        btnIngreso.classList.add("active");
-        btnGasto.classList.remove("active");
-      }).catch(console.error);
-    });
+/* ---------- CATEGORIAS ---------- */
+const categorias=[
+"Arriendo","Cuota apartamento","Energía eléctrica","Agua","Gas","Internet",
+"Carnes y proteínas","Mercado mensual","Frutas y verduras","Lácteos","Panadería",
+"Bebidas","Snacks","Comidas fuera","Gasolina","Transporte público","Taxi / apps",
+"Ropa","Calzado","Aseo personal","Medicamentos","Consultas médicas",
+"Educación","Cine","Viajes","Restaurantes","Tarjetas de crédito",
+"Ahorro","Inversiones","Gastos no clasificados"
+];
 
-    function mostrarMovimientos() {
-      const lista = document.getElementById("listaMovimientos");
-      const totalIngresosDiv = document.getElementById("totalIngresos");
-      const totalGastosDiv = document.getElementById("totalGastos");
-      const saldoDiv = document.getElementById("saldoActual");
+const inputCat=document.getElementById("categoria");
+const listCat=document.getElementById("listaCategorias");
 
-      db.collection("movimientos")
-        .orderBy("fecha", "desc")
-        .onSnapshot((snapshot) => {
-          lista.innerHTML = "";
-          let totalIngresos = 0;
-          let totalGastos = 0;
+inputCat.addEventListener("input",()=>{
+  listCat.innerHTML="";
+  categorias.filter(c=>c.toLowerCase().includes(inputCat.value.toLowerCase()))
+  .forEach(c=>{
+    const div=document.createElement("div");
+    div.className="autocomplete-item";
+    div.textContent=c;
+    div.onclick=()=>{inputCat.value=c;listCat.innerHTML="";}
+    listCat.appendChild(div);
+  });
+});
 
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            const li = document.createElement("li");
-            li.classList.add(data.tipoMovimiento.toLowerCase());
+/* ---------- MONTO ---------- */
+document.getElementById("add100").onclick=()=>{
+  const m=document.getElementById("monto");
+  m.value=(parseInt(m.value||0)+100000);
+};
 
-            const fecha = new Date(data.fecha.toDate());
-            li.innerHTML = `
-              <span class="monto">${data.tipoMovimiento} - COP ${data.monto.toLocaleString()}</span>
-              <span class="fecha">${fecha.toLocaleString()}</span>
-            `;
-            lista.appendChild(li);
+/* ---------- INGRESO / GASTO ---------- */
+let tipo="Ingreso";
+btnIngreso.onclick=()=>{tipo="Ingreso";btnIngreso.classList.add("active");btnGasto.classList.remove("active")}
+btnGasto.onclick=()=>{tipo="Gasto";btnGasto.classList.add("active");btnIngreso.classList.remove("active")}
 
-            if (data.tipoMovimiento === "Ingreso") totalIngresos += data.monto;
-            else totalGastos += data.monto;
-          });
+/* ---------- REGISTRO ---------- */
+formulario.onsubmit=e=>{
+  e.preventDefault();
+  db.collection("movimientos").add({
+    tipo,
+    monto:parseInt(monto.value),
+    categoria:categoria.value,
+    observacion:observacion.value,
+    fecha:new Date()
+  });
+  formulario.reset();
+}
 
-          const saldo = totalIngresos - totalGastos;
-          totalIngresosDiv.textContent = `COP ${totalIngresos.toLocaleString()}`;
-          totalGastosDiv.textContent = `COP ${totalGastos.toLocaleString()}`;
-          saldoDiv.textContent = `COP ${saldo.toLocaleString()}`;
-        });
-    }
+/* ---------- GRAFICO ---------- */
+const ctx=document.getElementById("grafico");
+const chart=new Chart(ctx,{
+  type:"line",
+  data:{labels:[],datasets:[
+    {label:"Ingresos",data:[],borderColor:"#34c759"},
+    {label:"Gastos",data:[],borderColor:"#ff3b30"}
+  ]},
+  options:{responsive:true}
+});
 
-    mostrarMovimientos();
-  </script>
+/* ---------- CONSULTA ---------- */
+db.collection("movimientos").orderBy("fecha","desc")
+.onSnapshot(snap=>{
+  let ing=0,gas=0;
+  let map={};
+  listaMovimientos.innerHTML="";
+
+  snap.forEach(d=>{
+    const x=d.data();
+    const day=new Date(x.fecha.toDate()).toLocaleDateString();
+    map[day]=map[day]||{i:0,g:0};
+    x.tipo==="Ingreso"?map[day].i+=x.monto:map[day].g+=x.monto;
+
+    if(x.tipo==="Ingreso")ing+=x.monto; else gas+=x.monto;
+
+    listaMovimientos.innerHTML+=`
+    <li class="${x.tipo.toLowerCase()}">
+      <strong>${x.tipo} · ${x.categoria}</strong><br>
+      COP ${x.monto.toLocaleString()}<br>
+      <small>${x.observacion||""}</small>
+    </li>`;
+  });
+
+  totalIngresos.textContent=`COP ${ing.toLocaleString()}`;
+  totalGastos.textContent=`COP ${gas.toLocaleString()}`;
+  saldo.textContent=`COP ${(ing-gas).toLocaleString()}`;
+
+  chart.data.labels=Object.keys(map);
+  chart.data.datasets[0].data=Object.values(map).map(x=>x.i);
+  chart.data.datasets[1].data=Object.values(map).map(x=>x.g);
+  chart.update();
+});
+</script>
 
 </body>
 </html>
