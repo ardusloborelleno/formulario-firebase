@@ -91,14 +91,14 @@ small{color:#666}
     <button type="button" id="btnGasto">Gasto</button>
   </div>
 
-  <input type="number" id="monto" placeholder="Monto COP">
+  <input type="number" id="monto" placeholder="Monto COP" required>
   <button type="button" class="increment" id="add100">+ 100.000</button>
 
-  <select id="catNivel1">
+  <select id="catNivel1" required>
     <option value="">Categoría principal</option>
   </select>
 
-  <select id="catNivel2">
+  <select id="catNivel2" required>
     <option value="">Subcategoría</option>
   </select>
 
@@ -124,36 +124,61 @@ firebase.initializeApp({
 const db=firebase.firestore();
 
 /* ---------- CATEGORIAS ---------- */
-const categorias={
-  "Servicios":["Agua","Energía","Gas","Internet","Telefonía"],
-  "Mercado":["Carnes","Frutas","Lácteos","Panadería","Bebidas"],
-  "Transporte":["Gasolina","Transporte público","Taxi","Moto"],
+const categoriasIngresos={
+  "Ingresos":["Nómina","Prima","Cesantías","Cadena"]
+};
+
+const categoriasGastos={
+  "Servicios":["Agua","Energía","Gas","Internet","Telefonía móvil"],
+  "Mercado":["Carnes","Frutas","Lácteos","Panadería","Bebidas","Snacks"],
+  "Transporte":["Gasolina","Transporte público","Taxi / Apps","Moto"],
   "Salud":["Medicamentos","Consultas","Exámenes"],
   "Educación":["Matrículas","Diplomados"],
   "Ocio":["Cine","Viajes","Restaurantes"],
-  "Finanzas":["Tarjetas","Préstamos","Ahorro"],
+  "Finanzas":["Tarjetas","Préstamos","Ahorro","Inversiones"],
   "Otros":["No clasificado"]
 };
 
 const cat1=document.getElementById("catNivel1");
 const cat2=document.getElementById("catNivel2");
 
-Object.keys(categorias).forEach(c=>{
-  cat1.innerHTML+=`<option>${c}</option>`;
-});
-
-cat1.onchange=()=>{
-  cat2.innerHTML='<option value="">Subcategoría</option>';
-  categorias[cat1.value]?.forEach(s=>{
-    cat2.innerHTML+=`<option>${s}</option>`;
-  });
-};
-
 /* ---------- UI ---------- */
 let tipo="Ingreso";
-btnIngreso.onclick=()=>{tipo="Ingreso";btnIngreso.classList.add("active");btnGasto.classList.remove("active")}
-btnGasto.onclick=()=>{tipo="Gasto";btnGasto.classList.add("active");btnIngreso.classList.remove("active")}
+
+function cargarCategorias(){
+  cat1.innerHTML='<option value="">Categoría principal</option>';
+  cat2.innerHTML='<option value="">Subcategoría</option>';
+
+  const origen = tipo==="Ingreso" ? categoriasIngresos : categoriasGastos;
+  Object.keys(origen).forEach(c=>{
+    cat1.innerHTML+=`<option value="${c}">${c}</option>`;
+  });
+
+  cat1.onchange=()=>{
+    cat2.innerHTML='<option value="">Subcategoría</option>';
+    origen[cat1.value]?.forEach(s=>{
+      cat2.innerHTML+=`<option value="${s}">${s}</option>`;
+    });
+  };
+}
+
+btnIngreso.onclick=()=>{
+  tipo="Ingreso";
+  btnIngreso.classList.add("active");
+  btnGasto.classList.remove("active");
+  cargarCategorias();
+};
+
+btnGasto.onclick=()=>{
+  tipo="Gasto";
+  btnGasto.classList.add("active");
+  btnIngreso.classList.remove("active");
+  cargarCategorias();
+};
+
 add100.onclick=()=>monto.value=(parseInt(monto.value||0)+100000);
+
+cargarCategorias();
 
 /* ---------- REGISTRO ---------- */
 formulario.onsubmit=e=>{
@@ -161,20 +186,21 @@ formulario.onsubmit=e=>{
   db.collection("movimientos").add({
     tipo,
     monto:Number(monto.value),
-    categoria1:cat1.value,
-    categoria2:cat2.value,
+    categoriaNivel1:cat1.value,
+    categoriaNivel2:cat2.value,
     observacion:observacion.value,
     fecha:new Date()
   });
   formulario.reset();
+  cargarCategorias();
 };
 
 /* ---------- GRAFICO ---------- */
 const chart=new Chart(grafico,{
   type:"line",
   data:{labels:[],datasets:[
-    {label:"Ingresos",data:[],borderColor:"#34c759"},
-    {label:"Gastos",data:[],borderColor:"#ff3b30"}
+    {label:"Ingresos",data:[],borderColor:"#34c759",tension:.4},
+    {label:"Gastos",data:[],borderColor:"#ff3b30",tension:.4}
   ]}
 });
 
@@ -195,7 +221,7 @@ db.collection("movimientos").orderBy("fecha","desc")
 
     listaMovimientos.innerHTML+=`
     <li class="${x.tipo.toLowerCase()}">
-      <strong>${x.categoria1} · ${x.categoria2}</strong><br>
+      <strong>${x.categoriaNivel1} · ${x.categoriaNivel2}</strong><br>
       COP ${x.monto.toLocaleString()}<br>
       <small>${x.observacion||""}</small>
     </li>`;
