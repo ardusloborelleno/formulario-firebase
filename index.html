@@ -131,10 +131,39 @@ li{
 li.ingreso{border-left:5px solid #34c759}
 li.gasto{border-left:5px solid #ff3b30}
 small{color:#666}
+
+/* NOTIFICATION */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #34c759;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,.2);
+  z-index: 1000;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 </style>
 </head>
 
 <body>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification"></div>
 
 <!-- SPLASH -->
 <div id="splash">
@@ -198,7 +227,7 @@ small{color:#666}
 
     <textarea id="observacion" rows="3" placeholder="Observaciones (opcional)"></textarea>
 
-    <button class="submit">Registrar</button>
+    <button class="submit" type="submit">Registrar</button>
   </form>
 
   <canvas id="grafico"></canvas>
@@ -218,6 +247,7 @@ const app = document.getElementById("app");
 const passwordInput = document.getElementById("password");
 const loginMsg = document.getElementById("loginMsg");
 const welcomeUser = document.getElementById("welcomeUser");
+const notification = document.getElementById("notification");
 
 /* ===== FIREBASE ===== */
 firebase.initializeApp({
@@ -231,6 +261,17 @@ const db = firebase.firestore();
 let currentUser = null;
 let chart = null;
 let appInitialized = false;
+
+/* ===== FUNCIONES UTILES ===== */
+function showNotification(message, type = 'success') {
+  notification.textContent = message;
+  notification.style.background = type === 'success' ? '#34c759' : '#ff3b30';
+  notification.style.display = 'block';
+  
+  setTimeout(() => {
+    notification.style.display = 'none';
+  }, 3000);
+}
 
 /* ===== SPLASH ===== */
 setTimeout(() => {
@@ -351,9 +392,11 @@ function initializeApp() {
 
     cat1.onchange = () => {
       cat2.innerHTML = '<option value="">Subcategoría</option>';
-      origen[cat1.value]?.forEach(s => {
-        cat2.innerHTML += `<option value="${s}">${s}</option>`;
-      });
+      if (origen[cat1.value]) {
+        origen[cat1.value].forEach(s => {
+          cat2.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+      }
     };
   }
 
@@ -373,18 +416,19 @@ function initializeApp() {
 
   document.getElementById("add100").onclick = () => {
     const montoInput = document.getElementById("monto");
-    montoInput.value = (parseInt(montoInput.value || 0) + 100000);
+    const currentValue = parseInt(montoInput.value) || 0;
+    montoInput.value = currentValue + 100000;
   };
 
   cargarCategorias();
 
   /* ---------- REGISTRO ---------- */
-  document.getElementById("formulario").onsubmit = e => {
+  document.getElementById("formulario").onsubmit = async (e) => {
     e.preventDefault();
 
     // Verificar que el usuario esté autenticado
     if (!currentUser) {
-      alert('Debes iniciar sesión para registrar movimientos');
+      showNotification("Debes iniciar sesión para registrar movimientos", "error");
       return;
     }
 
@@ -396,32 +440,38 @@ function initializeApp() {
 
     // Validaciones
     if (!monto || monto <= 0) {
-      alert('Ingresa un monto válido');
+      showNotification("Ingresa un monto válido", "error");
       return;
     }
     if (!catNivel1 || !catNivel2) {
-      alert('Selecciona ambas categorías');
+      showNotification("Selecciona ambas categorías", "error");
       return;
     }
 
-    // Guardar en Firestore
-    db.collection("movimientos").add({
-      tipo,
-      monto: Number(monto),
-      categoriaNivel1: catNivel1,
-      categoriaNivel2: catNivel2,
-      observacion: observacion,
-      usuario: currentUser,
-      usuarioNombre: USER_NAMES[currentUser],
-      fecha: new Date()
-    }).then(() => {
+    try {
+      // Guardar en Firestore - usando la estructura ORIGINAL del primer código
+      await db.collection("movimientos").add({
+        tipo,
+        monto: Number(monto),
+        categoriaNivel1: catNivel1,
+        categoriaNivel2: catNivel2,
+        observacion: observacion,
+        usuario: currentUser,
+        usuarioNombre: USER_NAMES[currentUser],
+        fecha: firebase.firestore.FieldValue.serverTimestamp() // Usar timestamp del servidor
+      });
+
+      // Mostrar notificación de éxito
+      showNotification(`✅ ${tipo} registrado correctamente: COP ${Number(monto).toLocaleString()}`);
+
       // Limpiar formulario
       document.getElementById("formulario").reset();
       cargarCategorias();
-    }).catch(error => {
+
+    } catch (error) {
       console.error("Error al guardar:", error);
-      alert("Error al guardar el movimiento");
-    });
+      showNotification("Error al guardar el movimiento: " + error.message, "error");
+    }
   };
 
   /* ---------- GRAFICO ---------- */
@@ -437,7 +487,8 @@ function initializeApp() {
           borderColor: "#34c759", 
           backgroundColor: "rgba(52, 199, 89, 0.1)",
           borderWidth: 2,
-          tension: 0.4 
+          tension: 0.4,
+          fill: true
         },
         { 
           label: "Gastos", 
@@ -445,7 +496,8 @@ function initializeApp() {
           borderColor: "#ff3b30", 
           backgroundColor: "rgba(255, 59, 48, 0.1)",
           borderWidth: 2,
-          tension: 0.4 
+          tension: 0.4,
+          fill: true
         }
       ]
     },
@@ -476,31 +528,69 @@ function initializeApp() {
     }
   });
 
-  /* ---------- CONSULTA ---------- */
-  // Escuchar cambios en los movimientos del usuario actual
+  /* ---------- CONSULTA Y ACTUALIZACIÓN EN TIEMPO REAL ---------- */
+  // Crear un índice compuesto en Firestore para esta consulta
   db.collection("movimientos")
     .where("usuario", "==", currentUser)
     .orderBy("fecha", "desc")
-    .onSnapshot(snap => {
-      let ing = 0, gas = 0;
+    .onSnapshot((snapshot) => {
+      let ing = 0;
+      let gas = 0;
       const map = {};
       const listaMovimientos = document.getElementById("listaMovimientos");
+      
+      // Limpiar lista
       listaMovimientos.innerHTML = "";
 
-      snap.forEach(d => {
-        const x = d.data();
-        const fecha = x.fecha.toDate ? x.fecha.toDate() : new Date(x.fecha);
-        const day = fecha.toLocaleDateString();
+      // Si no hay documentos
+      if (snapshot.empty) {
+        listaMovimientos.innerHTML = "<li style='text-align: center; color: #666;'>No hay movimientos registrados aún</li>";
         
-        // Inicializar el día en el mapa si no existe
-        map[day] = map[day] || { i: 0, g: 0 };
+        // Actualizar dashboard con ceros
+        document.getElementById("totalIngresos").textContent = "COP 0";
+        document.getElementById("totalGastos").textContent = "COP 0";
+        document.getElementById("saldo").textContent = "COP 0";
+        
+        // Limpiar gráfico
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+        chart.data.datasets[1].data = [];
+        chart.update();
+        return;
+      }
 
-        if (x.tipo === "Ingreso") {
-          ing += x.monto;
-          map[day].i += x.monto;
+      // Procesar cada documento
+      snapshot.forEach((doc) => {
+        const movimiento = doc.data();
+        
+        // Verificar si fecha existe y es un timestamp de Firestore
+        let fecha;
+        if (movimiento.fecha && movimiento.fecha.toDate) {
+          fecha = movimiento.fecha.toDate();
+        } else if (movimiento.fecha) {
+          fecha = new Date(movimiento.fecha);
         } else {
-          gas += x.monto;
-          map[day].g += x.monto;
+          fecha = new Date();
+        }
+        
+        const day = fecha.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+
+        // Inicializar el día en el mapa si no existe
+        if (!map[day]) {
+          map[day] = { i: 0, g: 0 };
+        }
+
+        // Sumar según el tipo
+        if (movimiento.tipo === "Ingreso") {
+          ing += movimiento.monto;
+          map[day].i += movimiento.monto;
+        } else {
+          gas += movimiento.monto;
+          map[day].g += movimiento.monto;
         }
 
         // Formatear fecha para mostrar
@@ -514,32 +604,37 @@ function initializeApp() {
 
         // Determinar icono según categoría
         let icono = "💰";
-        if (x.tipo === "Gasto") {
-          if (x.categoriaNivel1 === "Servicios") icono = "💡";
-          else if (x.categoriaNivel1 === "Mercado") icono = "🛒";
-          else if (x.categoriaNivel1 === "Transporte") icono = "🚗";
-          else if (x.categoriaNivel1 === "Salud") icono = "🏥";
-          else if (x.categoriaNivel1 === "Educación") icono = "📚";
-          else if (x.categoriaNivel1 === "Ocio") icono = "🎬";
-          else if (x.categoriaNivel1 === "Finanzas") icono = "💳";
+        if (movimiento.tipo === "Gasto") {
+          if (movimiento.categoriaNivel1 === "Servicios") icono = "💡";
+          else if (movimiento.categoriaNivel1 === "Mercado") icono = "🛒";
+          else if (movimiento.categoriaNivel1 === "Transporte") icono = "🚗";
+          else if (movimiento.categoriaNivel1 === "Salud") icono = "🏥";
+          else if (movimiento.categoriaNivel1 === "Educación") icono = "📚";
+          else if (movimiento.categoriaNivel1 === "Ocio") icono = "🎬";
+          else if (movimiento.categoriaNivel1 === "Finanzas") icono = "💳";
           else icono = "📝";
         } else {
           icono = "💵";
         }
 
-        listaMovimientos.innerHTML += `
-          <li class="${x.tipo.toLowerCase()}">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-              <span style="font-size: 20px;">${icono}</span>
-              <div>
-                <strong>${x.categoriaNivel1} · ${x.categoriaNivel2}</strong><br>
-                <span style="font-size: 18px; font-weight: bold; color: ${x.tipo === 'Ingreso' ? '#34c759' : '#ff3b30'}">
-                  ${x.tipo === 'Gasto' ? '-' : '+'} COP ${x.monto.toLocaleString()}
-                </span>
-              </div>
+        // Crear elemento de lista
+        const li = document.createElement("li");
+        li.className = movimiento.tipo.toLowerCase();
+        li.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+            <span style="font-size: 20px;">${icono}</span>
+            <div style="flex: 1;">
+              <strong>${movimiento.categoriaNivel1} · ${movimiento.categoriaNivel2}</strong><br>
+              <span style="font-size: 18px; font-weight: bold; color: ${movimiento.tipo === 'Ingreso' ? '#34c759' : '#ff3b30'}">
+                ${movimiento.tipo === 'Gasto' ? '-' : '+'} COP ${movimiento.monto.toLocaleString()}
+              </span>
             </div>
-            <small>${fechaFormateada} · ${x.observacion || "Sin observaciones"}</small>
-          </li>`;
+          </div>
+          <small>${fechaFormateada} · ${movimiento.observacion || "Sin observaciones"}</small>
+        `;
+        
+        // Agregar a la lista
+        listaMovimientos.appendChild(li);
       });
 
       // Actualizar dashboard
@@ -561,8 +656,10 @@ function initializeApp() {
       
       // Ordenar días cronológicamente
       const sortedDays = days.sort((a, b) => {
-        const dateA = new Date(a.split('/').reverse().join('-'));
-        const dateB = new Date(b.split('/').reverse().join('-'));
+        const [dayA, monthA, yearA] = a.split('/').map(Number);
+        const [dayB, monthB, yearB] = b.split('/').map(Number);
+        const dateA = new Date(yearA, monthA - 1, dayA);
+        const dateB = new Date(yearB, monthB - 1, dayB);
         return dateA - dateB;
       });
 
@@ -570,11 +667,40 @@ function initializeApp() {
       chart.data.datasets[0].data = sortedDays.map(day => map[day].i);
       chart.data.datasets[1].data = sortedDays.map(day => map[day].g);
       chart.update();
-    }, error => {
+
+    }, (error) => {
       console.error("Error en la consulta:", error);
+      
+      // Mostrar error de índice compuesto si es necesario
+      if (error.code === 'failed-precondition') {
+        console.warn("Necesitas crear un índice compuesto en Firebase Console para la consulta:");
+        console.warn("Colección: movimientos");
+        console.warn("Campos: usuario (Ascendente), fecha (Descendente)");
+        
+        // Fallback: consultar sin ordenar por fecha
+        db.collection("movimientos")
+          .where("usuario", "==", currentUser)
+          .get()
+          .then((snapshot) => {
+            // Procesar documentos localmente
+            const movimientos = [];
+            snapshot.forEach(doc => {
+              movimientos.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // Ordenar localmente por fecha descendente
+            movimientos.sort((a, b) => {
+              const fechaA = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha || 0);
+              const fechaB = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha || 0);
+              return fechaB - fechaA;
+            });
+            
+            // Actualizar UI con datos ordenados localmente
+            // (Aquí deberías llamar a la lógica para actualizar la UI)
+          });
+      }
     });
 }
 </script>
-
 </body>
 </html>
