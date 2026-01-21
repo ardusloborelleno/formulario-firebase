@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>MARSOL · Control de Gastos</title>
+<title>MARSOL · Cost Control</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -11,6 +11,51 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
 body{background:#f2f4f8;padding:20px;color:#1c1c1e}
+
+/* ---------- VISTAS ---------- */
+.screen{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+.hidden{display:none}
+
+/* ---------- SPLASH ---------- */
+.splash{
+  background:linear-gradient(135deg,#0f4c75,#1b9aaa,#5fdde5);
+  color:#fff;
+}
+.splash-content{text-align:center}
+.splash-content h1{font-size:48px;font-weight:700}
+.splash-content p{font-size:22px;opacity:.9}
+.splash-content span{font-size:14px;opacity:.8}
+
+/* ---------- USUARIO ---------- */
+.user-card{
+  background:#fff;
+  padding:30px;
+  border-radius:24px;
+  width:280px;
+  text-align:center;
+  box-shadow:0 20px 40px rgba(0,0,0,.15);
+}
+.user-card h2{margin-bottom:20px}
+.user-card button{
+  width:100%;
+  padding:14px;
+  margin-bottom:12px;
+  border:none;
+  border-radius:16px;
+  background:linear-gradient(135deg,#007aff,#5ac8fa);
+  color:#fff;
+  font-weight:600;
+  font-size:16px;
+}
+
+/* ---------- APP ---------- */
 h1{text-align:center;margin-bottom:20px}
 
 .dashboard{
@@ -77,6 +122,27 @@ small{color:#666}
 
 <body>
 
+<!-- SPLASH -->
+<div id="splash" class="screen splash">
+  <div class="splash-content">
+    <h1>MarSol</h1>
+    <p>Cost Control</p>
+    <span>Version 1.0 · 2026</span>
+  </div>
+</div>
+
+<!-- USUARIO -->
+<div id="userSelect" class="screen hidden">
+  <div class="user-card">
+    <h2>Selecciona tu perfil</h2>
+    <button onclick="selectUser('Ana Maria')">Ana María</button>
+    <button onclick="selectUser('Camilo Andres')">Camilo Andrés</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
 <h1>MARSOL 💰</h1>
 
 <div class="dashboard">
@@ -108,8 +174,9 @@ small{color:#666}
 </form>
 
 <canvas id="grafico"></canvas>
-
 <ul id="listaMovimientos"></ul>
+
+</div>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -123,11 +190,41 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* ---------- CATEGORIAS ---------- */
-const categoriasIngresos={
-  "Ingresos":["Nómina","Prima","Cesantías","Cadena"]
-};
+/* ---------- SPLASH ---------- */
+const splash=document.getElementById("splash");
+const userSelect=document.getElementById("userSelect");
+const app=document.getElementById("app");
 
+setTimeout(()=>{
+  splash.classList.add("hidden");
+  userSelect.classList.remove("hidden");
+},1500);
+
+/* ---------- BIOMETRÍA ---------- */
+async function biometricAuth(){
+  if(!window.PublicKeyCredential) throw "No biometría";
+  return navigator.credentials.get({
+    publicKey:{
+      challenge:new Uint8Array(32),
+      userVerification:"required",
+      timeout:60000
+    }
+  });
+}
+
+async function selectUser(user){
+  try{
+    await biometricAuth();
+    localStorage.setItem("usuarioActivo",user);
+    userSelect.classList.add("hidden");
+    app.classList.remove("hidden");
+  }catch{
+    alert("Autenticación biométrica requerida");
+  }
+}
+
+/* ---------- CATEGORIAS ---------- */
+const categoriasIngresos={"Ingresos":["Nómina","Prima","Cesantías","Cadena"]};
 const categoriasGastos={
   "Servicios":["Agua","Energía","Gas","Internet","Telefonía móvil"],
   "Mercado":["Carnes","Frutas","Lácteos","Panadería","Bebidas","Snacks"],
@@ -139,53 +236,29 @@ const categoriasGastos={
   "Otros":["No clasificado"]
 };
 
-const cat1=document.getElementById("catNivel1");
-const cat2=document.getElementById("catNivel2");
-
-/* ---------- UI ---------- */
 let tipo="Ingreso";
+const cat1=catNivel1,cat2=catNivel2;
 
 function cargarCategorias(){
   cat1.innerHTML='<option value="">Categoría principal</option>';
   cat2.innerHTML='<option value="">Subcategoría</option>';
-
-  const origen = tipo==="Ingreso" ? categoriasIngresos : categoriasGastos;
-  Object.keys(origen).forEach(c=>{
-    cat1.innerHTML+=`<option value="${c}">${c}</option>`;
-  });
-
-  cat1.onchange=()=>{
-    cat2.innerHTML='<option value="">Subcategoría</option>';
-    origen[cat1.value]?.forEach(s=>{
-      cat2.innerHTML+=`<option value="${s}">${s}</option>`;
-    });
-  };
+  const origen=tipo==="Ingreso"?categoriasIngresos:categoriasGastos;
+  Object.keys(origen).forEach(c=>cat1.innerHTML+=`<option>${c}</option>`);
+  cat1.onchange=()=>origen[cat1.value]?.forEach(s=>cat2.innerHTML+=`<option>${s}</option>`);
 }
 
-btnIngreso.onclick=()=>{
-  tipo="Ingreso";
-  btnIngreso.classList.add("active");
-  btnGasto.classList.remove("active");
-  cargarCategorias();
-};
-
-btnGasto.onclick=()=>{
-  tipo="Gasto";
-  btnGasto.classList.add("active");
-  btnIngreso.classList.remove("active");
-  cargarCategorias();
-};
-
-add100.onclick=()=>monto.value=(parseInt(monto.value||0)+100000);
-
+btnIngreso.onclick=()=>{tipo="Ingreso";btnIngreso.classList.add("active");btnGasto.classList.remove("active");cargarCategorias();}
+btnGasto.onclick=()=>{tipo="Gasto";btnGasto.classList.add("active");btnIngreso.classList.remove("active");cargarCategorias();}
+add100.onclick=()=>monto.value=(+monto.value||0)+100000;
 cargarCategorias();
 
 /* ---------- REGISTRO ---------- */
 formulario.onsubmit=e=>{
   e.preventDefault();
   db.collection("movimientos").add({
+    usuario:localStorage.getItem("usuarioActivo"),
     tipo,
-    monto:Number(monto.value),
+    monto:+monto.value,
     categoriaNivel1:cat1.value,
     categoriaNivel2:cat2.value,
     observacion:observacion.value,
@@ -205,35 +278,29 @@ const chart=new Chart(grafico,{
 });
 
 /* ---------- CONSULTA ---------- */
-db.collection("movimientos").orderBy("fecha","desc")
-.onSnapshot(snap=>{
-  let ing=0,gas=0;
-  const map={};
+db.collection("movimientos").orderBy("fecha","desc").onSnapshot(snap=>{
+  let ing=0,gas=0,map={};
   listaMovimientos.innerHTML="";
-
   snap.forEach(d=>{
     const x=d.data();
+    if(x.usuario!==localStorage.getItem("usuarioActivo")) return;
     const day=new Date(x.fecha.toDate()).toLocaleDateString();
     map[day]=map[day]||{i:0,g:0};
-
     if(x.tipo==="Ingreso"){ing+=x.monto;map[day].i+=x.monto}
     else{gas+=x.monto;map[day].g+=x.monto}
-
     listaMovimientos.innerHTML+=`
-    <li class="${x.tipo.toLowerCase()}">
-      <strong>${x.categoriaNivel1} · ${x.categoriaNivel2}</strong><br>
-      COP ${x.monto.toLocaleString()}<br>
-      <small>${x.observacion||""}</small>
-    </li>`;
+      <li class="${x.tipo.toLowerCase()}">
+        <strong>${x.categoriaNivel1} · ${x.categoriaNivel2}</strong><br>
+        COP ${x.monto.toLocaleString()}<br>
+        <small>${x.observacion||""}</small>
+      </li>`;
   });
-
   totalIngresos.textContent=`COP ${ing.toLocaleString()}`;
   totalGastos.textContent=`COP ${gas.toLocaleString()}`;
   saldo.textContent=`COP ${(ing-gas).toLocaleString()}`;
-
-  chart.data.labels=Object.keys(map);
-  chart.data.datasets[0].data=Object.values(map).map(x=>x.i);
-  chart.data.datasets[1].data=Object.values(map).map(x=>x.g);
+  chart.data.labels=Object.keys(map).reverse();
+  chart.data.datasets[0].data=Object.values(map).map(x=>x.i).reverse();
+  chart.data.datasets[1].data=Object.values(map).map(x=>x.g).reverse();
   chart.update();
 });
 </script>
