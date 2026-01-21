@@ -46,6 +46,28 @@ input{
 }
 #loginMsg{color:red;text-align:center;font-size:14px}
 
+/* APP HEADER */
+.user-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0,0,0,.06);
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background: #ff3b30;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
 /* DASHBOARD */
 h1{text-align:center;margin-bottom:20px}
 .dashboard{
@@ -61,7 +83,54 @@ h1{text-align:center;margin-bottom:20px}
 .gasto{background:linear-gradient(135deg,#ff3b30,#ff6b6b)}
 .saldo{background:linear-gradient(135deg,#007aff,#5ac8fa)}
 
-canvas{background:#fff;border-radius:20px;padding:20px}
+/* FORM */
+form{
+  background:#fff;border-radius:20px;padding:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:25px
+}
+ 
+.segmented{display:flex;background:#eee;border-radius:14px;margin-bottom:15px}
+.segmented button{
+  flex:1;border:none;padding:12px;
+  background:none;font-weight:600;cursor:pointer
+}
+.segmented .active{background:#007aff;color:#fff}
+ 
+input,select,textarea{
+  width:100%;padding:14px;border-radius:14px;
+  border:1px solid #ccc;margin-bottom:12px
+}
+ 
+.increment{
+  background:#e5f0ff;color:#007aff;
+  border:none;padding:10px;border-radius:12px;
+  cursor:pointer;font-weight:600;margin-bottom:12px
+}
+ 
+.submit{
+  width:100%;padding:14px;
+  border:none;border-radius:16px;
+  background:linear-gradient(135deg,#007aff,#5ac8fa);
+  color:#fff;font-weight:600;font-size:16px
+}
+
+/* CHART & MOVEMENTS */
+canvas{
+  background:#fff;border-radius:20px;
+  padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:25px
+}
+ 
+ul{list-style:none}
+li{
+  background:#fff;border-radius:16px;
+  padding:15px;margin-bottom:10px;
+  box-shadow:0 5px 15px rgba(0,0,0,.06)
+}
+li.ingreso{border-left:5px solid #34c759}
+li.gasto{border-left:5px solid #ff3b30}
+small{color:#666}
 </style>
 </head>
 
@@ -70,7 +139,7 @@ canvas{background:#fff;border-radius:20px;padding:20px}
 <!-- SPLASH -->
 <div id="splash">
   <h1>MarSol Cost Control</h1>
-  <p>Versión 1.0 · 2026</p>
+  <p>Versión 1.3 · 2026</p>
 </div>
 
 <!-- LOGIN -->
@@ -95,18 +164,51 @@ canvas{background:#fff;border-radius:20px;padding:20px}
 
 <!-- APP -->
 <div id="app">
+  <div class="user-info">
+    <div>
+      <h3 id="welcomeUser">Bienvenido/a</h3>
+    </div>
+    <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+  </div>
+
   <h1>MARSOL 💰</h1>
 
   <div class="dashboard">
-    <div class="card ingreso"><span>Ingresos</span><h2>COP 0</h2></div>
-    <div class="card gasto"><span>Gastos</span><h2>COP 0</h2></div>
-    <div class="card saldo"><span>Saldo</span><h2>COP 0</h2></div>
+    <div class="card ingreso"><span>Ingresos</span><h2 id="totalIngresos">COP 0</h2></div>
+    <div class="card gasto"><span>Gastos</span><h2 id="totalGastos">COP 0</h2></div>
+    <div class="card saldo"><span>Saldo</span><h2 id="saldo">COP 0</h2></div>
   </div>
+
+  <form id="formulario">
+    <div class="segmented">
+      <button type="button" id="btnIngreso" class="active">Ingreso</button>
+      <button type="button" id="btnGasto">Gasto</button>
+    </div>
+
+    <input type="number" id="monto" placeholder="Monto COP" required>
+    <button type="button" class="increment" id="add100">+ 100.000</button>
+
+    <select id="catNivel1" required>
+      <option value="">Categoría principal</option>
+    </select>
+
+    <select id="catNivel2" required>
+      <option value="">Subcategoría</option>
+    </select>
+
+    <textarea id="observacion" rows="3" placeholder="Observaciones (opcional)"></textarea>
+
+    <button class="submit">Registrar</button>
+  </form>
 
   <canvas id="grafico"></canvas>
 
-  <button onclick="logout()" style="background:#ff3b30">Cerrar sesión</button>
+  <ul id="listaMovimientos"></ul>
 </div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 /* ===== DOM ===== */
@@ -115,6 +217,20 @@ const login = document.getElementById("login");
 const app = document.getElementById("app");
 const passwordInput = document.getElementById("password");
 const loginMsg = document.getElementById("loginMsg");
+const welcomeUser = document.getElementById("welcomeUser");
+
+/* ===== FIREBASE ===== */
+firebase.initializeApp({
+  apiKey: "AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
+  authDomain: "formulario-github.firebaseapp.com",
+  projectId: "formulario-github"
+});
+const db = firebase.firestore();
+
+/* ===== VARIABLES GLOBALES ===== */
+let currentUser = null;
+let chart = null;
+let appInitialized = false;
 
 /* ===== SPLASH ===== */
 setTimeout(() => {
@@ -123,8 +239,6 @@ setTimeout(() => {
 }, 1500);
 
 /* ===== AUTH ===== */
-let currentUser = null;
-
 /*
 Contraseñas:
 Ana  -> 1234
@@ -135,51 +249,330 @@ const USERS = {
   camilo: "f8638b979b2f4f793ddb6dbd197e0ee25a7a6ea32b98d3d4f2f9c7c8c0b89b0d"
 };
 
-function showLogin(){
+const USER_NAMES = {
+  ana: "Ana María",
+  camilo: "Camilo Andrés"
+};
+
+function showLogin() {
   login.style.display = "block";
   app.style.display = "none";
+  currentUser = null;
+  passwordInput.value = "";
+  loginMsg.textContent = "";
+  appInitialized = false;
+  
+  // Destruir gráfico si existe
+  if (chart) {
+    chart.destroy();
+    chart = null;
+  }
 }
 
-function selectUser(user){
+function selectUser(user) {
   currentUser = user;
-  loginMsg.textContent =
-    "Usuario seleccionado: " +
-    (user === "ana" ? "Ana María" : "Camilo Andrés");
+  loginMsg.textContent = `Usuario seleccionado: ${USER_NAMES[user]}`;
 }
 
-async function hash(text){
+async function hash(text) {
   const data = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(buf))
-    .map(b => b.toString(16).padStart(2,"0"))
+    .map(b => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
-async function loginUser(){
-  if(!currentUser){
+async function loginUser() {
+  if (!currentUser) {
     loginMsg.textContent = "Selecciona un usuario";
     return;
   }
-  if(!passwordInput.value){
+  if (!passwordInput.value) {
     loginMsg.textContent = "Ingresa la contraseña";
     return;
   }
 
   const hashed = await hash(passwordInput.value);
-  if(hashed === USERS[currentUser]){
+  if (hashed === USERS[currentUser]) {
     loginMsg.textContent = "";
     passwordInput.value = "";
     login.style.display = "none";
     app.style.display = "block";
-  }else{
+    welcomeUser.textContent = `Bienvenido/a, ${USER_NAMES[currentUser]}`;
+    
+    // Inicializar la aplicación
+    if (!appInitialized) {
+      initializeApp();
+      appInitialized = true;
+    }
+  } else {
     loginMsg.textContent = "Contraseña incorrecta";
   }
 }
 
-function logout(){
+function logout() {
   currentUser = null;
   passwordInput.value = "";
   showLogin();
+}
+
+/* ===== LÓGICA DE LA APLICACIÓN ===== */
+function initializeApp() {
+  /* ---------- CATEGORIAS ---------- */
+  const categoriasIngresos = {
+    "Ingresos": ["Nómina", "Prima", "Cesantías", "Cadena"]
+  };
+
+  const categoriasGastos = {
+    "Servicios": ["Agua", "Energía", "Gas", "Internet", "Telefonía móvil"],
+    "Mercado": ["Carnes", "Frutas", "Lácteos", "Panadería", "Bebidas", "Snacks"],
+    "Transporte": ["Gasolina", "Transporte público", "Taxi / Apps", "Moto"],
+    "Salud": ["Medicamentos", "Consultas", "Exámenes"],
+    "Educación": ["Matrículas", "Diplomados"],
+    "Ocio": ["Cine", "Viajes", "Restaurantes"],
+    "Finanzas": ["Tarjetas", "Préstamos", "Ahorro", "Inversiones"],
+    "Otros": ["No clasificado"]
+  };
+
+  const cat1 = document.getElementById("catNivel1");
+  const cat2 = document.getElementById("catNivel2");
+
+  /* ---------- UI ---------- */
+  let tipo = "Ingreso";
+
+  function cargarCategorias() {
+    cat1.innerHTML = '<option value="">Categoría principal</option>';
+    cat2.innerHTML = '<option value="">Subcategoría</option>';
+
+    const origen = tipo === "Ingreso" ? categoriasIngresos : categoriasGastos;
+    Object.keys(origen).forEach(c => {
+      cat1.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+
+    cat1.onchange = () => {
+      cat2.innerHTML = '<option value="">Subcategoría</option>';
+      origen[cat1.value]?.forEach(s => {
+        cat2.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+    };
+  }
+
+  document.getElementById("btnIngreso").onclick = () => {
+    tipo = "Ingreso";
+    document.getElementById("btnIngreso").classList.add("active");
+    document.getElementById("btnGasto").classList.remove("active");
+    cargarCategorias();
+  };
+
+  document.getElementById("btnGasto").onclick = () => {
+    tipo = "Gasto";
+    document.getElementById("btnGasto").classList.add("active");
+    document.getElementById("btnIngreso").classList.remove("active");
+    cargarCategorias();
+  };
+
+  document.getElementById("add100").onclick = () => {
+    const montoInput = document.getElementById("monto");
+    montoInput.value = (parseInt(montoInput.value || 0) + 100000);
+  };
+
+  cargarCategorias();
+
+  /* ---------- REGISTRO ---------- */
+  document.getElementById("formulario").onsubmit = e => {
+    e.preventDefault();
+
+    // Verificar que el usuario esté autenticado
+    if (!currentUser) {
+      alert('Debes iniciar sesión para registrar movimientos');
+      return;
+    }
+
+    // Obtener valores del formulario
+    const monto = document.getElementById("monto").value;
+    const catNivel1 = cat1.value;
+    const catNivel2 = cat2.value;
+    const observacion = document.getElementById("observacion").value;
+
+    // Validaciones
+    if (!monto || monto <= 0) {
+      alert('Ingresa un monto válido');
+      return;
+    }
+    if (!catNivel1 || !catNivel2) {
+      alert('Selecciona ambas categorías');
+      return;
+    }
+
+    // Guardar en Firestore
+    db.collection("movimientos").add({
+      tipo,
+      monto: Number(monto),
+      categoriaNivel1: catNivel1,
+      categoriaNivel2: catNivel2,
+      observacion: observacion,
+      usuario: currentUser,
+      usuarioNombre: USER_NAMES[currentUser],
+      fecha: new Date()
+    }).then(() => {
+      // Limpiar formulario
+      document.getElementById("formulario").reset();
+      cargarCategorias();
+    }).catch(error => {
+      console.error("Error al guardar:", error);
+      alert("Error al guardar el movimiento");
+    });
+  };
+
+  /* ---------- GRAFICO ---------- */
+  const canvas = document.getElementById("grafico");
+  chart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        { 
+          label: "Ingresos", 
+          data: [], 
+          borderColor: "#34c759", 
+          backgroundColor: "rgba(52, 199, 89, 0.1)",
+          borderWidth: 2,
+          tension: 0.4 
+        },
+        { 
+          label: "Gastos", 
+          data: [], 
+          borderColor: "#ff3b30", 
+          backgroundColor: "rgba(255, 59, 48, 0.1)",
+          borderWidth: 2,
+          tension: 0.4 
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Evolución de Ingresos y Gastos',
+          font: {
+            size: 16
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return 'COP ' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+
+  /* ---------- CONSULTA ---------- */
+  // Escuchar cambios en los movimientos del usuario actual
+  db.collection("movimientos")
+    .where("usuario", "==", currentUser)
+    .orderBy("fecha", "desc")
+    .onSnapshot(snap => {
+      let ing = 0, gas = 0;
+      const map = {};
+      const listaMovimientos = document.getElementById("listaMovimientos");
+      listaMovimientos.innerHTML = "";
+
+      snap.forEach(d => {
+        const x = d.data();
+        const fecha = x.fecha.toDate ? x.fecha.toDate() : new Date(x.fecha);
+        const day = fecha.toLocaleDateString();
+        
+        // Inicializar el día en el mapa si no existe
+        map[day] = map[day] || { i: 0, g: 0 };
+
+        if (x.tipo === "Ingreso") {
+          ing += x.monto;
+          map[day].i += x.monto;
+        } else {
+          gas += x.monto;
+          map[day].g += x.monto;
+        }
+
+        // Formatear fecha para mostrar
+        const fechaFormateada = fecha.toLocaleDateString('es-ES', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Determinar icono según categoría
+        let icono = "💰";
+        if (x.tipo === "Gasto") {
+          if (x.categoriaNivel1 === "Servicios") icono = "💡";
+          else if (x.categoriaNivel1 === "Mercado") icono = "🛒";
+          else if (x.categoriaNivel1 === "Transporte") icono = "🚗";
+          else if (x.categoriaNivel1 === "Salud") icono = "🏥";
+          else if (x.categoriaNivel1 === "Educación") icono = "📚";
+          else if (x.categoriaNivel1 === "Ocio") icono = "🎬";
+          else if (x.categoriaNivel1 === "Finanzas") icono = "💳";
+          else icono = "📝";
+        } else {
+          icono = "💵";
+        }
+
+        listaMovimientos.innerHTML += `
+          <li class="${x.tipo.toLowerCase()}">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+              <span style="font-size: 20px;">${icono}</span>
+              <div>
+                <strong>${x.categoriaNivel1} · ${x.categoriaNivel2}</strong><br>
+                <span style="font-size: 18px; font-weight: bold; color: ${x.tipo === 'Ingreso' ? '#34c759' : '#ff3b30'}">
+                  ${x.tipo === 'Gasto' ? '-' : '+'} COP ${x.monto.toLocaleString()}
+                </span>
+              </div>
+            </div>
+            <small>${fechaFormateada} · ${x.observacion || "Sin observaciones"}</small>
+          </li>`;
+      });
+
+      // Actualizar dashboard
+      document.getElementById("totalIngresos").textContent = `COP ${ing.toLocaleString()}`;
+      document.getElementById("totalGastos").textContent = `COP ${gas.toLocaleString()}`;
+      const saldo = ing - gas;
+      document.getElementById("saldo").textContent = `COP ${saldo.toLocaleString()}`;
+      
+      // Actualizar color del saldo en el card
+      const saldoCard = document.querySelector('.card.saldo');
+      if (saldo < 0) {
+        saldoCard.style.background = 'linear-gradient(135deg, #ff3b30, #ff6b6b)';
+      } else {
+        saldoCard.style.background = 'linear-gradient(135deg, #007aff, #5ac8fa)';
+      }
+
+      // Actualizar gráfico
+      const days = Object.keys(map);
+      
+      // Ordenar días cronológicamente
+      const sortedDays = days.sort((a, b) => {
+        const dateA = new Date(a.split('/').reverse().join('-'));
+        const dateB = new Date(b.split('/').reverse().join('-'));
+        return dateA - dateB;
+      });
+
+      chart.data.labels = sortedDays;
+      chart.data.datasets[0].data = sortedDays.map(day => map[day].i);
+      chart.data.datasets[1].data = sortedDays.map(day => map[day].g);
+      chart.update();
+    }, error => {
+      console.error("Error en la consulta:", error);
+    });
 }
 </script>
 
