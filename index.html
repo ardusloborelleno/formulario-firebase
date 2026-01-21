@@ -40,9 +40,10 @@ button{
 button.secondary{
   background:#e5e5ea;color:#000
 }
-input{
-  width:100%;padding:14px;border-radius:14px;
-  border:1px solid #ccc;margin-bottom:12px
+button.secondary.selected{
+  background:#007aff;
+  color:#fff;
+  border:2px solid #0056cc;
 }
 #loginMsg{color:red;text-align:center;font-size:14px}
 
@@ -168,7 +169,7 @@ small{color:#666}
 <!-- SPLASH -->
 <div id="splash">
   <h1>MarSol Cost Control</h1>
-  <p>Versión 1.3 · 2026</p>
+  <p>Versión 1.4 · 2026</p>
 </div>
 
 <!-- LOGIN -->
@@ -176,15 +177,8 @@ small{color:#666}
   <div class="login-box">
     <h2>Selecciona tu perfil</h2>
 
-    <button class="secondary" onclick="selectUser('ana')">Ana María</button>
-    <button class="secondary" onclick="selectUser('camilo')">Camilo Andrés</button>
-
-    <input
-      type="password"
-      id="password"
-      placeholder="Contraseña"
-      autocomplete="current-password"
-    >
+    <button class="secondary" id="btnAna" onclick="selectUser('ana')">Ana María</button>
+    <button class="secondary" id="btnCamilo" onclick="selectUser('camilo')">Camilo Andrés</button>
 
     <button onclick="loginUser()">Ingresar</button>
     <p id="loginMsg"></p>
@@ -244,10 +238,11 @@ small{color:#666}
 const splash = document.getElementById("splash");
 const login = document.getElementById("login");
 const app = document.getElementById("app");
-const passwordInput = document.getElementById("password");
 const loginMsg = document.getElementById("loginMsg");
 const welcomeUser = document.getElementById("welcomeUser");
 const notification = document.getElementById("notification");
+const btnAna = document.getElementById("btnAna");
+const btnCamilo = document.getElementById("btnCamilo");
 
 /* ===== FIREBASE ===== */
 firebase.initializeApp({
@@ -280,16 +275,6 @@ setTimeout(() => {
 }, 1500);
 
 /* ===== AUTH ===== */
-/*
-Contraseñas:
-Ana  -> 1234
-Camilo -> 5678
-*/
-const USERS = {
-  ana: "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
-  camilo: "f8638b979b2f4f793ddb6dbd197e0ee25a7a6ea32b98d3d4f2f9c7c8c0b89b0d"
-};
-
 const USER_NAMES = {
   ana: "Ana María",
   camilo: "Camilo Andrés"
@@ -299,9 +284,12 @@ function showLogin() {
   login.style.display = "block";
   app.style.display = "none";
   currentUser = null;
-  passwordInput.value = "";
   loginMsg.textContent = "";
   appInitialized = false;
+  
+  // Resetear botones de selección
+  btnAna.classList.remove('selected');
+  btnCamilo.classList.remove('selected');
   
   // Destruir gráfico si existe
   if (chart) {
@@ -312,48 +300,39 @@ function showLogin() {
 
 function selectUser(user) {
   currentUser = user;
+  
+  // Actualizar estilos de botones
+  if (user === 'ana') {
+    btnAna.classList.add('selected');
+    btnCamilo.classList.remove('selected');
+  } else {
+    btnCamilo.classList.add('selected');
+    btnAna.classList.remove('selected');
+  }
+  
   loginMsg.textContent = `Usuario seleccionado: ${USER_NAMES[user]}`;
 }
 
-async function hash(text) {
-  const data = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-async function loginUser() {
+function loginUser() {
   if (!currentUser) {
     loginMsg.textContent = "Selecciona un usuario";
     return;
   }
-  if (!passwordInput.value) {
-    loginMsg.textContent = "Ingresa la contraseña";
-    return;
-  }
 
-  const hashed = await hash(passwordInput.value);
-  if (hashed === USERS[currentUser]) {
-    loginMsg.textContent = "";
-    passwordInput.value = "";
-    login.style.display = "none";
-    app.style.display = "block";
-    welcomeUser.textContent = `Bienvenido/a, ${USER_NAMES[currentUser]}`;
-    
-    // Inicializar la aplicación
-    if (!appInitialized) {
-      initializeApp();
-      appInitialized = true;
-    }
-  } else {
-    loginMsg.textContent = "Contraseña incorrecta";
+  loginMsg.textContent = "";
+  login.style.display = "none";
+  app.style.display = "block";
+  welcomeUser.textContent = `Bienvenido/a, ${USER_NAMES[currentUser]}`;
+  
+  // Inicializar la aplicación
+  if (!appInitialized) {
+    initializeApp();
+    appInitialized = true;
   }
 }
 
 function logout() {
   currentUser = null;
-  passwordInput.value = "";
   showLogin();
 }
 
@@ -449,7 +428,7 @@ function initializeApp() {
     }
 
     try {
-      // Guardar en Firestore - usando la estructura ORIGINAL del primer código
+      // Guardar en Firestore
       await db.collection("movimientos").add({
         tipo,
         monto: Number(monto),
@@ -458,7 +437,7 @@ function initializeApp() {
         observacion: observacion,
         usuario: currentUser,
         usuarioNombre: USER_NAMES[currentUser],
-        fecha: firebase.firestore.FieldValue.serverTimestamp() // Usar timestamp del servidor
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
       });
 
       // Mostrar notificación de éxito
@@ -529,177 +508,314 @@ function initializeApp() {
   });
 
   /* ---------- CONSULTA Y ACTUALIZACIÓN EN TIEMPO REAL ---------- */
-  // Crear un índice compuesto en Firestore para esta consulta
-  db.collection("movimientos")
+  // Intentar consulta con índice compuesto
+  const query = db.collection("movimientos")
     .where("usuario", "==", currentUser)
-    .orderBy("fecha", "desc")
-    .onSnapshot((snapshot) => {
-      let ing = 0;
-      let gas = 0;
-      const map = {};
-      const listaMovimientos = document.getElementById("listaMovimientos");
+    .orderBy("fecha", "desc");
+
+  const unsubscribe = query.onSnapshot((snapshot) => {
+    let ing = 0;
+    let gas = 0;
+    const map = {};
+    const listaMovimientos = document.getElementById("listaMovimientos");
+    
+    // Limpiar lista
+    listaMovimientos.innerHTML = "";
+
+    // Si no hay documentos
+    if (snapshot.empty) {
+      listaMovimientos.innerHTML = "<li style='text-align: center; color: #666;'>No hay movimientos registrados aún</li>";
       
-      // Limpiar lista
-      listaMovimientos.innerHTML = "";
-
-      // Si no hay documentos
-      if (snapshot.empty) {
-        listaMovimientos.innerHTML = "<li style='text-align: center; color: #666;'>No hay movimientos registrados aún</li>";
-        
-        // Actualizar dashboard con ceros
-        document.getElementById("totalIngresos").textContent = "COP 0";
-        document.getElementById("totalGastos").textContent = "COP 0";
-        document.getElementById("saldo").textContent = "COP 0";
-        
-        // Limpiar gráfico
-        chart.data.labels = [];
-        chart.data.datasets[0].data = [];
-        chart.data.datasets[1].data = [];
-        chart.update();
-        return;
-      }
-
-      // Procesar cada documento
-      snapshot.forEach((doc) => {
-        const movimiento = doc.data();
-        
-        // Verificar si fecha existe y es un timestamp de Firestore
-        let fecha;
-        if (movimiento.fecha && movimiento.fecha.toDate) {
-          fecha = movimiento.fecha.toDate();
-        } else if (movimiento.fecha) {
-          fecha = new Date(movimiento.fecha);
-        } else {
-          fecha = new Date();
-        }
-        
-        const day = fecha.toLocaleDateString('es-ES', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        });
-
-        // Inicializar el día en el mapa si no existe
-        if (!map[day]) {
-          map[day] = { i: 0, g: 0 };
-        }
-
-        // Sumar según el tipo
-        if (movimiento.tipo === "Ingreso") {
-          ing += movimiento.monto;
-          map[day].i += movimiento.monto;
-        } else {
-          gas += movimiento.monto;
-          map[day].g += movimiento.monto;
-        }
-
-        // Formatear fecha para mostrar
-        const fechaFormateada = fecha.toLocaleDateString('es-ES', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-
-        // Determinar icono según categoría
-        let icono = "💰";
-        if (movimiento.tipo === "Gasto") {
-          if (movimiento.categoriaNivel1 === "Servicios") icono = "💡";
-          else if (movimiento.categoriaNivel1 === "Mercado") icono = "🛒";
-          else if (movimiento.categoriaNivel1 === "Transporte") icono = "🚗";
-          else if (movimiento.categoriaNivel1 === "Salud") icono = "🏥";
-          else if (movimiento.categoriaNivel1 === "Educación") icono = "📚";
-          else if (movimiento.categoriaNivel1 === "Ocio") icono = "🎬";
-          else if (movimiento.categoriaNivel1 === "Finanzas") icono = "💳";
-          else icono = "📝";
-        } else {
-          icono = "💵";
-        }
-
-        // Crear elemento de lista
-        const li = document.createElement("li");
-        li.className = movimiento.tipo.toLowerCase();
-        li.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-            <span style="font-size: 20px;">${icono}</span>
-            <div style="flex: 1;">
-              <strong>${movimiento.categoriaNivel1} · ${movimiento.categoriaNivel2}</strong><br>
-              <span style="font-size: 18px; font-weight: bold; color: ${movimiento.tipo === 'Ingreso' ? '#34c759' : '#ff3b30'}">
-                ${movimiento.tipo === 'Gasto' ? '-' : '+'} COP ${movimiento.monto.toLocaleString()}
-              </span>
-            </div>
-          </div>
-          <small>${fechaFormateada} · ${movimiento.observacion || "Sin observaciones"}</small>
-        `;
-        
-        // Agregar a la lista
-        listaMovimientos.appendChild(li);
-      });
-
-      // Actualizar dashboard
-      document.getElementById("totalIngresos").textContent = `COP ${ing.toLocaleString()}`;
-      document.getElementById("totalGastos").textContent = `COP ${gas.toLocaleString()}`;
-      const saldo = ing - gas;
-      document.getElementById("saldo").textContent = `COP ${saldo.toLocaleString()}`;
+      // Actualizar dashboard con ceros
+      document.getElementById("totalIngresos").textContent = "COP 0";
+      document.getElementById("totalGastos").textContent = "COP 0";
+      document.getElementById("saldo").textContent = "COP 0";
       
-      // Actualizar color del saldo en el card
-      const saldoCard = document.querySelector('.card.saldo');
-      if (saldo < 0) {
-        saldoCard.style.background = 'linear-gradient(135deg, #ff3b30, #ff6b6b)';
-      } else {
-        saldoCard.style.background = 'linear-gradient(135deg, #007aff, #5ac8fa)';
-      }
-
-      // Actualizar gráfico
-      const days = Object.keys(map);
-      
-      // Ordenar días cronológicamente
-      const sortedDays = days.sort((a, b) => {
-        const [dayA, monthA, yearA] = a.split('/').map(Number);
-        const [dayB, monthB, yearB] = b.split('/').map(Number);
-        const dateA = new Date(yearA, monthA - 1, dayA);
-        const dateB = new Date(yearB, monthB - 1, dayB);
-        return dateA - dateB;
-      });
-
-      chart.data.labels = sortedDays;
-      chart.data.datasets[0].data = sortedDays.map(day => map[day].i);
-      chart.data.datasets[1].data = sortedDays.map(day => map[day].g);
+      // Limpiar gráfico
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+      chart.data.datasets[1].data = [];
       chart.update();
+      return;
+    }
 
-    }, (error) => {
-      console.error("Error en la consulta:", error);
+    // Procesar cada documento
+    snapshot.forEach((doc) => {
+      const movimiento = doc.data();
       
-      // Mostrar error de índice compuesto si es necesario
-      if (error.code === 'failed-precondition') {
-        console.warn("Necesitas crear un índice compuesto en Firebase Console para la consulta:");
-        console.warn("Colección: movimientos");
-        console.warn("Campos: usuario (Ascendente), fecha (Descendente)");
-        
-        // Fallback: consultar sin ordenar por fecha
-        db.collection("movimientos")
-          .where("usuario", "==", currentUser)
-          .get()
-          .then((snapshot) => {
-            // Procesar documentos localmente
-            const movimientos = [];
-            snapshot.forEach(doc => {
-              movimientos.push({ id: doc.id, ...doc.data() });
-            });
-            
-            // Ordenar localmente por fecha descendente
-            movimientos.sort((a, b) => {
-              const fechaA = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha || 0);
-              const fechaB = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha || 0);
-              return fechaB - fechaA;
-            });
-            
-            // Actualizar UI con datos ordenados localmente
-            // (Aquí deberías llamar a la lógica para actualizar la UI)
-          });
+      // Verificar si fecha existe y es un timestamp de Firestore
+      let fecha;
+      if (movimiento.fecha && movimiento.fecha.toDate) {
+        fecha = movimiento.fecha.toDate();
+      } else if (movimiento.fecha) {
+        fecha = new Date(movimiento.fecha);
+      } else {
+        fecha = new Date();
       }
+      
+      const day = fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      // Inicializar el día en el mapa si no existe
+      if (!map[day]) {
+        map[day] = { i: 0, g: 0 };
+      }
+
+      // Sumar según el tipo
+      if (movimiento.tipo === "Ingreso") {
+        ing += movimiento.monto;
+        map[day].i += movimiento.monto;
+      } else {
+        gas += movimiento.monto;
+        map[day].g += movimiento.monto;
+      }
+
+      // Formatear fecha para mostrar
+      const fechaFormateada = fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Determinar icono según categoría
+      let icono = "💰";
+      if (movimiento.tipo === "Gasto") {
+        if (movimiento.categoriaNivel1 === "Servicios") icono = "💡";
+        else if (movimiento.categoriaNivel1 === "Mercado") icono = "🛒";
+        else if (movimiento.categoriaNivel1 === "Transporte") icono = "🚗";
+        else if (movimiento.categoriaNivel1 === "Salud") icono = "🏥";
+        else if (movimiento.categoriaNivel1 === "Educación") icono = "📚";
+        else if (movimiento.categoriaNivel1 === "Ocio") icono = "🎬";
+        else if (movimiento.categoriaNivel1 === "Finanzas") icono = "💳";
+        else icono = "📝";
+      } else {
+        icono = "💵";
+      }
+
+      // Crear elemento de lista
+      const li = document.createElement("li");
+      li.className = movimiento.tipo.toLowerCase();
+      li.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+          <span style="font-size: 20px;">${icono}</span>
+          <div style="flex: 1;">
+            <strong>${movimiento.categoriaNivel1} · ${movimiento.categoriaNivel2}</strong><br>
+            <span style="font-size: 18px; font-weight: bold; color: ${movimiento.tipo === 'Ingreso' ? '#34c759' : '#ff3b30'}">
+              ${movimiento.tipo === 'Gasto' ? '-' : '+'} COP ${movimiento.monto.toLocaleString()}
+            </span>
+          </div>
+        </div>
+        <small>${fechaFormateada} · ${movimiento.observacion || "Sin observaciones"}</small>
+      `;
+      
+      // Agregar a la lista
+      listaMovimientos.appendChild(li);
     });
+
+    // Actualizar dashboard
+    document.getElementById("totalIngresos").textContent = `COP ${ing.toLocaleString()}`;
+    document.getElementById("totalGastos").textContent = `COP ${gas.toLocaleString()}`;
+    const saldo = ing - gas;
+    document.getElementById("saldo").textContent = `COP ${saldo.toLocaleString()}`;
+    
+    // Actualizar color del saldo en el card
+    const saldoCard = document.querySelector('.card.saldo');
+    if (saldo < 0) {
+      saldoCard.style.background = 'linear-gradient(135deg, #ff3b30, #ff6b6b)';
+    } else {
+      saldoCard.style.background = 'linear-gradient(135deg, #007aff, #5ac8fa)';
+    }
+
+    // Actualizar gráfico
+    const days = Object.keys(map);
+    
+    // Ordenar días cronológicamente
+    const sortedDays = days.sort((a, b) => {
+      const [dayA, monthA, yearA] = a.split('/').map(Number);
+      const [dayB, monthB, yearB] = b.split('/').map(Number);
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      return dateA - dateB;
+    });
+
+    chart.data.labels = sortedDays;
+    chart.data.datasets[0].data = sortedDays.map(day => map[day].i);
+    chart.data.datasets[1].data = sortedDays.map(day => map[day].g);
+    chart.update();
+
+  }, (error) => {
+    console.error("Error en la consulta:", error);
+    
+    // Si hay error por índice, hacer consulta sin ordenar
+    if (error.code === 'failed-precondition') {
+      console.log("Haciendo consulta alternativa sin ordenamiento...");
+      
+      db.collection("movimientos")
+        .where("usuario", "==", currentUser)
+        .get()
+        .then((snapshot) => {
+          const movimientos = [];
+          snapshot.forEach(doc => {
+            movimientos.push({ id: doc.id, ...doc.data() });
+          });
+          
+          // Ordenar localmente por fecha descendente
+          movimientos.sort((a, b) => {
+            const fechaA = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha || 0);
+            const fechaB = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha || 0);
+            return fechaB - fechaA;
+          });
+          
+          // Procesar movimientos ordenados localmente
+          processMovements(movimientos);
+        })
+        .catch(err => {
+          console.error("Error en consulta alternativa:", err);
+          showNotification("Error al cargar movimientos", "error");
+        });
+    } else {
+      showNotification("Error al cargar movimientos", "error");
+    }
+  });
+
+  // Función para procesar movimientos (usada en caso de error de índice)
+  function processMovements(movimientos) {
+    let ing = 0;
+    let gas = 0;
+    const map = {};
+    const listaMovimientos = document.getElementById("listaMovimientos");
+    
+    // Limpiar lista
+    listaMovimientos.innerHTML = "";
+
+    // Si no hay movimientos
+    if (movimientos.length === 0) {
+      listaMovimientos.innerHTML = "<li style='text-align: center; color: #666;'>No hay movimientos registrados aún</li>";
+      
+      // Actualizar dashboard con ceros
+      document.getElementById("totalIngresos").textContent = "COP 0";
+      document.getElementById("totalGastos").textContent = "COP 0";
+      document.getElementById("saldo").textContent = "COP 0";
+      
+      // Limpiar gráfico
+      chart.data.labels = [];
+      chart.data.datasets[0].data = [];
+      chart.data.datasets[1].data = [];
+      chart.update();
+      return;
+    }
+
+    // Procesar cada movimiento
+    movimientos.forEach((movimiento) => {
+      let fecha;
+      if (movimiento.fecha && movimiento.fecha.toDate) {
+        fecha = movimiento.fecha.toDate();
+      } else if (movimiento.fecha) {
+        fecha = new Date(movimiento.fecha);
+      } else {
+        fecha = new Date();
+      }
+      
+      const day = fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      // Inicializar el día en el mapa si no existe
+      if (!map[day]) {
+        map[day] = { i: 0, g: 0 };
+      }
+
+      // Sumar según el tipo
+      if (movimiento.tipo === "Ingreso") {
+        ing += movimiento.monto;
+        map[day].i += movimiento.monto;
+      } else {
+        gas += movimiento.monto;
+        map[day].g += movimiento.monto;
+      }
+
+      // Formatear fecha para mostrar
+      const fechaFormateada = fecha.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Determinar icono según categoría
+      let icono = "💰";
+      if (movimiento.tipo === "Gasto") {
+        if (movimiento.categoriaNivel1 === "Servicios") icono = "💡";
+        else if (movimiento.categoriaNivel1 === "Mercado") icono = "🛒";
+        else if (movimiento.categoriaNivel1 === "Transporte") icono = "🚗";
+        else if (movimiento.categoriaNivel1 === "Salud") icono = "🏥";
+        else if (movimiento.categoriaNivel1 === "Educación") icono = "📚";
+        else if (movimiento.categoriaNivel1 === "Ocio") icono = "🎬";
+        else if (movimiento.categoriaNivel1 === "Finanzas") icono = "💳";
+        else icono = "📝";
+      } else {
+        icono = "💵";
+      }
+
+      // Crear elemento de lista
+      const li = document.createElement("li");
+      li.className = movimiento.tipo.toLowerCase();
+      li.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+          <span style="font-size: 20px;">${icono}</span>
+          <div style="flex: 1;">
+            <strong>${movimiento.categoriaNivel1} · ${movimiento.categoriaNivel2}</strong><br>
+            <span style="font-size: 18px; font-weight: bold; color: ${movimiento.tipo === 'Ingreso' ? '#34c759' : '#ff3b30'}">
+              ${movimiento.tipo === 'Gasto' ? '-' : '+'} COP ${movimiento.monto.toLocaleString()}
+            </span>
+          </div>
+        </div>
+        <small>${fechaFormateada} · ${movimiento.observacion || "Sin observaciones"}</small>
+      `;
+      
+      // Agregar a la lista
+      listaMovimientos.appendChild(li);
+    });
+
+    // Actualizar dashboard
+    document.getElementById("totalIngresos").textContent = `COP ${ing.toLocaleString()}`;
+    document.getElementById("totalGastos").textContent = `COP ${gas.toLocaleString()}`;
+    const saldo = ing - gas;
+    document.getElementById("saldo").textContent = `COP ${saldo.toLocaleString()}`;
+    
+    // Actualizar color del saldo en el card
+    const saldoCard = document.querySelector('.card.saldo');
+    if (saldo < 0) {
+      saldoCard.style.background = 'linear-gradient(135deg, #ff3b30, #ff6b6b)';
+    } else {
+      saldoCard.style.background = 'linear-gradient(135deg, #007aff, #5ac8fa)';
+    }
+
+    // Actualizar gráfico
+    const days = Object.keys(map);
+    
+    // Ordenar días cronológicamente
+    const sortedDays = days.sort((a, b) => {
+      const [dayA, monthA, yearA] = a.split('/').map(Number);
+      const [dayB, monthB, yearB] = b.split('/').map(Number);
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      return dateA - dateB;
+    });
+
+    chart.data.labels = sortedDays;
+    chart.data.datasets[0].data = sortedDays.map(day => map[day].i);
+    chart.data.datasets[1].data = sortedDays.map(day => map[day].g);
+    chart.update();
+  }
 }
 </script>
 </body>
