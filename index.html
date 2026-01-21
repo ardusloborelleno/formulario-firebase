@@ -38,7 +38,7 @@ body{background:#f2f4f8;padding:20px;color:#1c1c1e}
   background:#fff;
   padding:30px;
   border-radius:24px;
-  width:280px;
+  width:300px;
   text-align:center;
   box-shadow:0 20px 40px rgba(0,0,0,.15);
 }
@@ -49,40 +49,10 @@ body{background:#f2f4f8;padding:20px;color:#1c1c1e}
   margin-bottom:12px;
   border:none;
   border-radius:16px;
-  background:linear-gradient(135deg,#007aff,#5ac8fa);
+  background:#000;
   color:#fff;
   font-weight:600;
   font-size:16px;
-}
-
-/* ---------- FACE ID ---------- */
-.faceid-card{
-  background:#fff;
-  padding:30px;
-  border-radius:24px;
-  width:260px;
-  text-align:center;
-  box-shadow:0 20px 40px rgba(0,0,0,.15);
-}
-.faceid-icon{
-  width:60px;
-  height:60px;
-  margin:0 auto 20px;
-  border-radius:18px;
-  border:3px solid #007aff;
-  position:relative;
-}
-.faceid-icon::before,
-.faceid-icon::after{
-  content:"";
-  position:absolute;
-  inset:10px;
-  border:2px solid #007aff;
-  border-radius:12px;
-}
-.faceid-icon::after{
-  inset:18px;
-  border-radius:8px;
 }
 
 /* ---------- APP ---------- */
@@ -161,21 +131,11 @@ small{color:#666}
   </div>
 </div>
 
-<!-- SELECCIÓN USUARIO -->
-<div id="userSelect" class="screen hidden">
+<!-- LOGIN -->
+<div id="login" class="screen hidden">
   <div class="user-card">
-    <h2>Selecciona tu perfil</h2>
-    <button onclick="selectUser('Ana Maria')">Ana María</button>
-    <button onclick="selectUser('Camilo Andres')">Camilo Andrés</button>
-  </div>
-</div>
-
-<!-- FACE ID -->
-<div id="faceID" class="screen hidden">
-  <div class="faceid-card">
-    <div class="faceid-icon"></div>
-    <h2>Face ID</h2>
-    <p>Confirma tu identidad</p>
+    <h2>Acceso seguro</h2>
+    <button onclick="loginApple()">Continuar con Apple</button>
   </div>
 </div>
 
@@ -199,16 +159,10 @@ small{color:#666}
   <input type="number" id="monto" placeholder="Monto COP" required>
   <button type="button" class="increment" id="add100">+ 100.000</button>
 
-  <select id="catNivel1" required>
-    <option value="">Categoría principal</option>
-  </select>
+  <select id="catNivel1" required></select>
+  <select id="catNivel2" required></select>
 
-  <select id="catNivel2" required>
-    <option value="">Subcategoría</option>
-  </select>
-
-  <textarea id="observacion" rows="3" placeholder="Observaciones (opcional)"></textarea>
-
+  <textarea id="observacion" rows="3" placeholder="Observaciones"></textarea>
   <button class="submit">Registrar</button>
 </form>
 
@@ -219,6 +173,7 @@ small{color:#666}
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
@@ -227,33 +182,37 @@ firebase.initializeApp({
   authDomain:"formulario-github.firebaseapp.com",
   projectId:"formulario-github"
 });
-const db=firebase.firestore();
+
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 /* ---------- VISTAS ---------- */
-const splash=document.getElementById("splash");
-const userSelect=document.getElementById("userSelect");
-const faceID=document.getElementById("faceID");
-const app=document.getElementById("app");
+const splash = document.getElementById("splash");
+const login = document.getElementById("login");
+const app = document.getElementById("app");
 
-/* ---------- SPLASH ---------- */
 setTimeout(()=>{
   splash.classList.add("hidden");
-  userSelect.classList.remove("hidden");
+  login.classList.remove("hidden");
 },1500);
 
-/* ---------- FACE ID (UX iOS) ---------- */
-function selectUser(user){
-  userSelect.classList.add("hidden");
-  faceID.classList.remove("hidden");
-
-  setTimeout(()=>{
-    localStorage.setItem("usuarioActivo",user);
-    faceID.classList.add("hidden");
-    app.classList.remove("hidden");
-  },1200);
+/* ---------- AUTH APPLE (FACEID REAL) ---------- */
+function loginApple(){
+  const provider = new firebase.auth.OAuthProvider('apple.com');
+  auth.signInWithPopup(provider);
 }
 
-/* ---------- CATEGORÍAS ---------- */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    login.classList.add("hidden");
+    app.classList.remove("hidden");
+    iniciarApp(user.uid);
+  }
+});
+
+/* ---------- APP ---------- */
+function iniciarApp(uid){
+
 const categoriasIngresos={"Ingresos":["Nómina","Prima","Cesantías","Cadena"]};
 const categoriasGastos={
   "Servicios":["Agua","Energía","Gas","Internet","Telefonía móvil"],
@@ -270,14 +229,11 @@ let tipo="Ingreso";
 const cat1=catNivel1,cat2=catNivel2;
 
 function cargarCategorias(){
-  cat1.innerHTML='<option value="">Categoría principal</option>';
+  cat1.innerHTML='<option value="">Categoría</option>';
   cat2.innerHTML='<option value="">Subcategoría</option>';
   const origen=tipo==="Ingreso"?categoriasIngresos:categoriasGastos;
   Object.keys(origen).forEach(c=>cat1.innerHTML+=`<option>${c}</option>`);
-  cat1.onchange=()=>{
-    cat2.innerHTML='<option value="">Subcategoría</option>';
-    origen[cat1.value]?.forEach(s=>cat2.innerHTML+=`<option>${s}</option>`);
-  };
+  cat1.onchange=()=>origen[cat1.value]?.forEach(s=>cat2.innerHTML+=`<option>${s}</option>`);
 }
 
 btnIngreso.onclick=()=>{tipo="Ingreso";btnIngreso.classList.add("active");btnGasto.classList.remove("active");cargarCategorias();}
@@ -285,11 +241,10 @@ btnGasto.onclick=()=>{tipo="Gasto";btnGasto.classList.add("active");btnIngreso.c
 add100.onclick=()=>monto.value=(+monto.value||0)+100000;
 cargarCategorias();
 
-/* ---------- REGISTRO ---------- */
 formulario.onsubmit=e=>{
   e.preventDefault();
   db.collection("movimientos").add({
-    usuario:localStorage.getItem("usuarioActivo"),
+    uid,
     tipo,
     monto:+monto.value,
     categoriaNivel1:cat1.value,
@@ -301,7 +256,6 @@ formulario.onsubmit=e=>{
   cargarCategorias();
 };
 
-/* ---------- GRÁFICO ---------- */
 const chart=new Chart(grafico,{
   type:"line",
   data:{labels:[],datasets:[
@@ -310,13 +264,13 @@ const chart=new Chart(grafico,{
   ]}
 });
 
-/* ---------- CONSULTA ---------- */
-db.collection("movimientos").orderBy("fecha","desc").onSnapshot(snap=>{
+db.collection("movimientos").where("uid","==",uid)
+.orderBy("fecha","desc")
+.onSnapshot(snap=>{
   let ing=0,gas=0,map={};
   listaMovimientos.innerHTML="";
   snap.forEach(d=>{
     const x=d.data();
-    if(x.usuario!==localStorage.getItem("usuarioActivo")) return;
     const day=new Date(x.fecha.toDate()).toLocaleDateString();
     map[day]=map[day]||{i:0,g:0};
     if(x.tipo==="Ingreso"){ing+=x.monto;map[day].i+=x.monto}
@@ -324,8 +278,7 @@ db.collection("movimientos").orderBy("fecha","desc").onSnapshot(snap=>{
     listaMovimientos.innerHTML+=`
       <li class="${x.tipo.toLowerCase()}">
         <strong>${x.categoriaNivel1} · ${x.categoriaNivel2}</strong><br>
-        COP ${x.monto.toLocaleString()}<br>
-        <small>${x.observacion||""}</small>
+        COP ${x.monto.toLocaleString()}
       </li>`;
   });
   totalIngresos.textContent=`COP ${ing.toLocaleString()}`;
@@ -336,6 +289,7 @@ db.collection("movimientos").orderBy("fecha","desc").onSnapshot(snap=>{
   chart.data.datasets[1].data=Object.values(map).map(x=>x.g).reverse();
   chart.update();
 });
+}
 </script>
 
 </body>
