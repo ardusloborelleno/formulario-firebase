@@ -34,12 +34,17 @@ body{background:#f2f4f8;color:#1c1c1e}
 button{
   width:100%;padding:14px;border:none;
   border-radius:14px;font-weight:600;
-  background:#007aff;color:#fff;margin-bottom:12px
+  background:#007aff;color:#fff;margin-bottom:12px;
+  cursor:pointer
+}
+button.secondary{
+  background:#e5e5ea;color:#000
 }
 input{
   width:100%;padding:14px;border-radius:14px;
   border:1px solid #ccc;margin-bottom:12px
 }
+#loginMsg{color:red;text-align:center;font-size:14px}
 
 /* DASHBOARD */
 h1{text-align:center;margin-bottom:20px}
@@ -72,13 +77,19 @@ canvas{background:#fff;border-radius:20px;padding:20px}
 <div id="login">
   <div class="login-box">
     <h2>Selecciona tu perfil</h2>
-    <button onclick="selectUser('ana')">Ana María</button>
-    <button onclick="selectUser('camilo')">Camilo Andrés</button>
 
-    <input type="password" id="password" placeholder="Contraseña"
-           autocomplete="current-password">
+    <button class="secondary" onclick="selectUser('ana')">Ana María</button>
+    <button class="secondary" onclick="selectUser('camilo')">Camilo Andrés</button>
+
+    <input
+      type="password"
+      id="password"
+      placeholder="Contraseña"
+      autocomplete="current-password"
+    >
+
     <button onclick="loginUser()">Ingresar</button>
-    <p id="loginMsg" style="color:red;text-align:center"></p>
+    <p id="loginMsg"></p>
   </div>
 </div>
 
@@ -87,16 +98,18 @@ canvas{background:#fff;border-radius:20px;padding:20px}
   <h1>MARSOL 💰</h1>
 
   <div class="dashboard">
-    <div class="card ingreso"><span>Ingresos</span><h2 id="totalIngresos">COP 0</h2></div>
-    <div class="card gasto"><span>Gastos</span><h2 id="totalGastos">COP 0</h2></div>
-    <div class="card saldo"><span>Saldo</span><h2 id="saldo">COP 0</h2></div>
+    <div class="card ingreso"><span>Ingresos</span><h2>COP 0</h2></div>
+    <div class="card gasto"><span>Gastos</span><h2>COP 0</h2></div>
+    <div class="card saldo"><span>Saldo</span><h2>COP 0</h2></div>
   </div>
 
   <canvas id="grafico"></canvas>
+
+  <button onclick="logout()" style="background:#ff3b30">Cerrar sesión</button>
 </div>
 
 <script>
-/* ===== DOM REFERENCES ===== */
+/* ===== DOM ===== */
 const splash = document.getElementById("splash");
 const login = document.getElementById("login");
 const app = document.getElementById("app");
@@ -106,62 +119,67 @@ const loginMsg = document.getElementById("loginMsg");
 /* ===== SPLASH ===== */
 setTimeout(() => {
   splash.style.display = "none";
-  checkSession();
+  showLogin();
 }, 1500);
 
 /* ===== AUTH ===== */
 let currentUser = null;
 
-/* Contraseñas hasheadas (ejemplo)
-   ana: 1234
-   camilo: 5678
+/*
+Contraseñas:
+Ana  -> 1234
+Camilo -> 5678
 */
 const USERS = {
   ana: "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
   camilo: "f8638b979b2f4f793ddb6dbd197e0ee25a7a6ea32b98d3d4f2f9c7c8c0b89b0d"
 };
 
-function selectUser(user) {
-  currentUser = user;
-  loginMsg.textContent = `Usuario seleccionado: ${user === 'ana' ? 'Ana María' : 'Camilo Andrés'}`;
+function showLogin(){
+  login.style.display = "block";
+  app.style.display = "none";
 }
 
-async function hash(text) {
+function selectUser(user){
+  currentUser = user;
+  loginMsg.textContent =
+    "Usuario seleccionado: " +
+    (user === "ana" ? "Ana María" : "Camilo Andrés");
+}
+
+async function hash(text){
   const data = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(buf))
-    .map(b => b.toString(16).padStart(2, "0"))
+    .map(b => b.toString(16).padStart(2,"0"))
     .join("");
 }
 
-async function loginUser() {
-  if (!currentUser || !passwordInput.value) {
-    loginMsg.textContent = "Selecciona un usuario e ingresa la contraseña";
+async function loginUser(){
+  if(!currentUser){
+    loginMsg.textContent = "Selecciona un usuario";
+    return;
+  }
+  if(!passwordInput.value){
+    loginMsg.textContent = "Ingresa la contraseña";
     return;
   }
 
   const hashed = await hash(passwordInput.value);
-  if (hashed === USERS[currentUser]) {
-    localStorage.setItem("marsolUser", currentUser);
-    showApp();
-  } else {
+  if(hashed === USERS[currentUser]){
+    loginMsg.textContent = "";
+    passwordInput.value = "";
+    login.style.display = "none";
+    app.style.display = "block";
+  }else{
     loginMsg.textContent = "Contraseña incorrecta";
   }
 }
 
-function checkSession() {
-  const saved = localStorage.getItem("marsolUser");
-  if (saved) {
-    currentUser = saved;
-    showApp();
-  } else {
-    login.style.display = "block";
-  }
-}
-
-function showApp() {
-  login.style.display = "none";
-  app.style.display = "block";
+function logout(){
+  currentUser = null;
+  passwordInput.value = "";
+  showLogin();
 }
 </script>
 
