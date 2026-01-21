@@ -55,6 +55,36 @@ body{background:#f2f4f8;padding:20px;color:#1c1c1e}
   font-size:16px;
 }
 
+/* ---------- FACE ID ---------- */
+.faceid-card{
+  background:#fff;
+  padding:30px;
+  border-radius:24px;
+  width:260px;
+  text-align:center;
+  box-shadow:0 20px 40px rgba(0,0,0,.15);
+}
+.faceid-icon{
+  width:60px;
+  height:60px;
+  margin:0 auto 20px;
+  border-radius:18px;
+  border:3px solid #007aff;
+  position:relative;
+}
+.faceid-icon::before,
+.faceid-icon::after{
+  content:"";
+  position:absolute;
+  inset:10px;
+  border:2px solid #007aff;
+  border-radius:12px;
+}
+.faceid-icon::after{
+  inset:18px;
+  border-radius:8px;
+}
+
 /* ---------- APP ---------- */
 h1{text-align:center;margin-bottom:20px}
 
@@ -131,12 +161,21 @@ small{color:#666}
   </div>
 </div>
 
-<!-- USUARIO -->
+<!-- SELECCIÓN USUARIO -->
 <div id="userSelect" class="screen hidden">
   <div class="user-card">
     <h2>Selecciona tu perfil</h2>
     <button onclick="selectUser('Ana Maria')">Ana María</button>
     <button onclick="selectUser('Camilo Andres')">Camilo Andrés</button>
+  </div>
+</div>
+
+<!-- FACE ID -->
+<div id="faceID" class="screen hidden">
+  <div class="faceid-card">
+    <div class="faceid-icon"></div>
+    <h2>Face ID</h2>
+    <p>Confirma tu identidad</p>
   </div>
 </div>
 
@@ -190,40 +229,31 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-/* ---------- SPLASH ---------- */
+/* ---------- VISTAS ---------- */
 const splash=document.getElementById("splash");
 const userSelect=document.getElementById("userSelect");
+const faceID=document.getElementById("faceID");
 const app=document.getElementById("app");
 
+/* ---------- SPLASH ---------- */
 setTimeout(()=>{
   splash.classList.add("hidden");
   userSelect.classList.remove("hidden");
 },1500);
 
-/* ---------- BIOMETRÍA ---------- */
-async function biometricAuth(){
-  if(!window.PublicKeyCredential) throw "No biometría";
-  return navigator.credentials.get({
-    publicKey:{
-      challenge:new Uint8Array(32),
-      userVerification:"required",
-      timeout:60000
-    }
-  });
-}
+/* ---------- FACE ID (UX iOS) ---------- */
+function selectUser(user){
+  userSelect.classList.add("hidden");
+  faceID.classList.remove("hidden");
 
-async function selectUser(user){
-  try{
-    await biometricAuth();
+  setTimeout(()=>{
     localStorage.setItem("usuarioActivo",user);
-    userSelect.classList.add("hidden");
+    faceID.classList.add("hidden");
     app.classList.remove("hidden");
-  }catch{
-    alert("Autenticación biométrica requerida");
-  }
+  },1200);
 }
 
-/* ---------- CATEGORIAS ---------- */
+/* ---------- CATEGORÍAS ---------- */
 const categoriasIngresos={"Ingresos":["Nómina","Prima","Cesantías","Cadena"]};
 const categoriasGastos={
   "Servicios":["Agua","Energía","Gas","Internet","Telefonía móvil"],
@@ -244,7 +274,10 @@ function cargarCategorias(){
   cat2.innerHTML='<option value="">Subcategoría</option>';
   const origen=tipo==="Ingreso"?categoriasIngresos:categoriasGastos;
   Object.keys(origen).forEach(c=>cat1.innerHTML+=`<option>${c}</option>`);
-  cat1.onchange=()=>origen[cat1.value]?.forEach(s=>cat2.innerHTML+=`<option>${s}</option>`);
+  cat1.onchange=()=>{
+    cat2.innerHTML='<option value="">Subcategoría</option>';
+    origen[cat1.value]?.forEach(s=>cat2.innerHTML+=`<option>${s}</option>`);
+  };
 }
 
 btnIngreso.onclick=()=>{tipo="Ingreso";btnIngreso.classList.add("active");btnGasto.classList.remove("active");cargarCategorias();}
@@ -268,7 +301,7 @@ formulario.onsubmit=e=>{
   cargarCategorias();
 };
 
-/* ---------- GRAFICO ---------- */
+/* ---------- GRÁFICO ---------- */
 const chart=new Chart(grafico,{
   type:"line",
   data:{labels:[],datasets:[
