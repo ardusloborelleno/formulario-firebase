@@ -10,54 +10,39 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
-body{background:#f2f4f8;padding:20px;color:#1c1c1e}
+body{background:#f2f4f8;color:#1c1c1e}
 
-/* ---------- VISTAS ---------- */
-.screen{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
+/* SPLASH */
+#splash{
+  position:fixed;inset:0;
+  background:linear-gradient(180deg,#0f4c75,#3282b8,#bbe1fa);
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  color:#fff;z-index:1000
 }
-.hidden{display:none}
+#splash h1{font-size:32px;font-weight:700;letter-spacing:.5px}
+#splash p{margin-top:8px;opacity:.85}
 
-/* ---------- SPLASH ---------- */
-.splash{
-  background:linear-gradient(135deg,#0f4c75,#1b9aaa,#5fdde5);
-  color:#fff;
+/* LOGIN */
+#login,#app{display:none;padding:20px}
+.login-box{
+  max-width:360px;margin:80px auto;
+  background:#fff;border-radius:20px;
+  padding:25px;box-shadow:0 10px 25px rgba(0,0,0,.1)
 }
-.splash-content{text-align:center}
-.splash-content h1{font-size:48px;font-weight:700}
-.splash-content p{font-size:22px;opacity:.9}
-.splash-content span{font-size:14px;opacity:.8}
-
-/* ---------- USUARIO ---------- */
-.user-card{
-  background:#fff;
-  padding:30px;
-  border-radius:24px;
-  width:300px;
-  text-align:center;
-  box-shadow:0 20px 40px rgba(0,0,0,.15);
+.login-box h2{text-align:center;margin-bottom:20px}
+button{
+  width:100%;padding:14px;border:none;
+  border-radius:14px;font-weight:600;
+  background:#007aff;color:#fff;margin-bottom:12px
 }
-.user-card h2{margin-bottom:20px}
-.user-card button{
-  width:100%;
-  padding:14px;
-  margin-bottom:12px;
-  border:none;
-  border-radius:16px;
-  background:#000;
-  color:#fff;
-  font-weight:600;
-  font-size:16px;
+input{
+  width:100%;padding:14px;border-radius:14px;
+  border:1px solid #ccc;margin-bottom:12px
 }
 
-/* ---------- APP ---------- */
+/* DASHBOARD */
 h1{text-align:center;margin-bottom:20px}
-
 .dashboard{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -76,219 +61,88 @@ form{
   box-shadow:0 10px 25px rgba(0,0,0,.08);
   margin-bottom:25px
 }
-
 .segmented{display:flex;background:#eee;border-radius:14px;margin-bottom:15px}
-.segmented button{
-  flex:1;border:none;padding:12px;
-  background:none;font-weight:600;cursor:pointer
-}
+.segmented button{flex:1;background:none;color:#000}
 .segmented .active{background:#007aff;color:#fff}
 
-input,select,textarea{
-  width:100%;padding:14px;border-radius:14px;
-  border:1px solid #ccc;margin-bottom:12px
-}
-
-.increment{
-  background:#e5f0ff;color:#007aff;
-  border:none;padding:10px;border-radius:12px;
-  cursor:pointer;font-weight:600;margin-bottom:12px
-}
-
-.submit{
-  width:100%;padding:14px;
-  border:none;border-radius:16px;
-  background:linear-gradient(135deg,#007aff,#5ac8fa);
-  color:#fff;font-weight:600;font-size:16px
-}
-
-canvas{
-  background:#fff;border-radius:20px;
-  padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);
-  margin-bottom:25px
-}
-
-ul{list-style:none}
-li{
-  background:#fff;border-radius:16px;
-  padding:15px;margin-bottom:10px;
-  box-shadow:0 5px 15px rgba(0,0,0,.06)
-}
-li.ingreso{border-left:5px solid #34c759}
-li.gasto{border-left:5px solid #ff3b30}
-small{color:#666}
+canvas{background:#fff;border-radius:20px;padding:20px}
+ul{list-style:none;margin-top:20px}
+li{background:#fff;border-radius:14px;padding:15px;margin-bottom:10px}
 </style>
 </head>
 
 <body>
 
-<!-- SPLASH -->
-<div id="splash" class="screen splash">
-  <div class="splash-content">
-    <h1>MarSol</h1>
-    <p>Cost Control</p>
-    <span>Version 1.0 · 2026</span>
+<div id="splash">
+  <h1>MarSol Cost Control</h1>
+  <p>Versión 1.0 · 2026</p>
+</div>
+
+<div id="login">
+  <div class="login-box">
+    <h2>Selecciona tu perfil</h2>
+    <button onclick="selectUser('ana')">Ana María</button>
+    <button onclick="selectUser('camilo')">Camilo Andrés</button>
+
+    <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password">
+    <button onclick="login()">Ingresar</button>
+    <p id="loginMsg" style="color:red;text-align:center"></p>
   </div>
 </div>
 
-<!-- LOGIN -->
-<div id="login" class="screen hidden">
-  <div class="user-card">
-    <h2>Acceso seguro</h2>
-    <button onclick="loginApple()">Continuar con Apple</button>
-  </div>
-</div>
+<div id="app">
+  <h1>MARSOL 💰</h1>
 
-<!-- APP -->
-<div id="app" class="hidden">
-
-<h1>MARSOL 💰</h1>
-
-<div class="dashboard">
-  <div class="card ingreso"><span>Ingresos</span><h2 id="totalIngresos">COP 0</h2></div>
-  <div class="card gasto"><span>Gastos</span><h2 id="totalGastos">COP 0</h2></div>
-  <div class="card saldo"><span>Saldo</span><h2 id="saldo">COP 0</h2></div>
-</div>
-
-<form id="formulario">
-  <div class="segmented">
-    <button type="button" id="btnIngreso" class="active">Ingreso</button>
-    <button type="button" id="btnGasto">Gasto</button>
+  <div class="dashboard">
+    <div class="card ingreso"><span>Ingresos</span><h2 id="totalIngresos">COP 0</h2></div>
+    <div class="card gasto"><span>Gastos</span><h2 id="totalGastos">COP 0</h2></div>
+    <div class="card saldo"><span>Saldo</span><h2 id="saldo">COP 0</h2></div>
   </div>
 
-  <input type="number" id="monto" placeholder="Monto COP" required>
-  <button type="button" class="increment" id="add100">+ 100.000</button>
-
-  <select id="catNivel1" required></select>
-  <select id="catNivel2" required></select>
-
-  <textarea id="observacion" rows="3" placeholder="Observaciones"></textarea>
-  <button class="submit">Registrar</button>
-</form>
-
-<canvas id="grafico"></canvas>
-<ul id="listaMovimientos"></ul>
-
+  <canvas id="grafico"></canvas>
 </div>
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
-  authDomain:"formulario-github.firebaseapp.com",
-  projectId:"formulario-github"
-});
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-/* ---------- VISTAS ---------- */
-const splash = document.getElementById("splash");
-const login = document.getElementById("login");
-const app = document.getElementById("app");
-
+/* SPLASH */
 setTimeout(()=>{
-  splash.classList.add("hidden");
-  login.classList.remove("hidden");
+  splash.style.display="none";
+  checkSession();
 },1500);
 
-/* ---------- AUTH APPLE (FACEID REAL) ---------- */
-function loginApple(){
-  const provider = new firebase.auth.OAuthProvider('apple.com');
-  auth.signInWithPopup(provider);
+/* AUTH */
+let currentUser=null;
+const USERS={
+  ana:"e3afed0047b08059d0fada10f400c1e5",
+  camilo:"a7c3c2aa70d99921f9fb23ac87382997"
+};
+
+function selectUser(u){currentUser=u;}
+
+async function hash(text){
+  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-auth.onAuthStateChanged(user=>{
-  if(user){
-    login.classList.add("hidden");
-    app.classList.remove("hidden");
-    iniciarApp(user.uid);
+async function login(){
+  const pass=password.value;
+  if(!currentUser||!pass)return;
+  const h=await hash(pass);
+  if(h===USERS[currentUser]){
+    localStorage.setItem("marsolUser",currentUser);
+    showApp();
+  }else{
+    loginMsg.textContent="Contraseña incorrecta";
   }
-});
-
-/* ---------- APP ---------- */
-function iniciarApp(uid){
-
-const categoriasIngresos={"Ingresos":["Nómina","Prima","Cesantías","Cadena"]};
-const categoriasGastos={
-  "Servicios":["Agua","Energía","Gas","Internet","Telefonía móvil"],
-  "Mercado":["Carnes","Frutas","Lácteos","Panadería","Bebidas","Snacks"],
-  "Transporte":["Gasolina","Transporte público","Taxi / Apps","Moto"],
-  "Salud":["Medicamentos","Consultas","Exámenes"],
-  "Educación":["Matrículas","Diplomados"],
-  "Ocio":["Cine","Viajes","Restaurantes"],
-  "Finanzas":["Tarjetas","Préstamos","Ahorro","Inversiones"],
-  "Otros":["No clasificado"]
-};
-
-let tipo="Ingreso";
-const cat1=catNivel1,cat2=catNivel2;
-
-function cargarCategorias(){
-  cat1.innerHTML='<option value="">Categoría</option>';
-  cat2.innerHTML='<option value="">Subcategoría</option>';
-  const origen=tipo==="Ingreso"?categoriasIngresos:categoriasGastos;
-  Object.keys(origen).forEach(c=>cat1.innerHTML+=`<option>${c}</option>`);
-  cat1.onchange=()=>origen[cat1.value]?.forEach(s=>cat2.innerHTML+=`<option>${s}</option>`);
 }
 
-btnIngreso.onclick=()=>{tipo="Ingreso";btnIngreso.classList.add("active");btnGasto.classList.remove("active");cargarCategorias();}
-btnGasto.onclick=()=>{tipo="Gasto";btnGasto.classList.add("active");btnIngreso.classList.remove("active");cargarCategorias();}
-add100.onclick=()=>monto.value=(+monto.value||0)+100000;
-cargarCategorias();
+function checkSession(){
+  if(localStorage.getItem("marsolUser")) showApp();
+  else login.style.display="block";
+}
 
-formulario.onsubmit=e=>{
-  e.preventDefault();
-  db.collection("movimientos").add({
-    uid,
-    tipo,
-    monto:+monto.value,
-    categoriaNivel1:cat1.value,
-    categoriaNivel2:cat2.value,
-    observacion:observacion.value,
-    fecha:new Date()
-  });
-  formulario.reset();
-  cargarCategorias();
-};
-
-const chart=new Chart(grafico,{
-  type:"line",
-  data:{labels:[],datasets:[
-    {label:"Ingresos",data:[],borderColor:"#34c759",tension:.4},
-    {label:"Gastos",data:[],borderColor:"#ff3b30",tension:.4}
-  ]}
-});
-
-db.collection("movimientos").where("uid","==",uid)
-.orderBy("fecha","desc")
-.onSnapshot(snap=>{
-  let ing=0,gas=0,map={};
-  listaMovimientos.innerHTML="";
-  snap.forEach(d=>{
-    const x=d.data();
-    const day=new Date(x.fecha.toDate()).toLocaleDateString();
-    map[day]=map[day]||{i:0,g:0};
-    if(x.tipo==="Ingreso"){ing+=x.monto;map[day].i+=x.monto}
-    else{gas+=x.monto;map[day].g+=x.monto}
-    listaMovimientos.innerHTML+=`
-      <li class="${x.tipo.toLowerCase()}">
-        <strong>${x.categoriaNivel1} · ${x.categoriaNivel2}</strong><br>
-        COP ${x.monto.toLocaleString()}
-      </li>`;
-  });
-  totalIngresos.textContent=`COP ${ing.toLocaleString()}`;
-  totalGastos.textContent=`COP ${gas.toLocaleString()}`;
-  saldo.textContent=`COP ${(ing-gas).toLocaleString()}`;
-  chart.data.labels=Object.keys(map).reverse();
-  chart.data.datasets[0].data=Object.values(map).map(x=>x.i).reverse();
-  chart.data.datasets[1].data=Object.values(map).map(x=>x.g).reverse();
-  chart.update();
-});
+function showApp(){
+  login.style.display="none";
+  app.style.display="block";
 }
 </script>
 
