@@ -2,607 +2,1035 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>MARSOL · Cost Control</title>
+<title>MarSol · Control Financiero</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
-body{background:#f2f4f8;color:#1c1c1e}
+/* ===== VARIABLES & RESET ===== */
+:root {
+  --primary-dark: #232A39;
+  --primary-blue: #4189ED;
+  --secondary-blue: #4F60A0;
+  --light-blue: #8B97A7;
+  --light-gray: #F5F7FA;
+  --white: #FFFFFF;
+  --success: #34C759;
+  --warning: #FF9500;
+  --error: #FF3B30;
+  --shadow: 0 8px 24px rgba(35, 42, 57, 0.08);
+  --shadow-light: 0 4px 12px rgba(35, 42, 57, 0.04);
+  --border-radius: 16px;
+  --border-radius-sm: 12px;
+  --border-radius-lg: 24px;
+}
 
-/* SPLASH */
-#splash{
-  position:fixed;inset:0;
-  background:linear-gradient(180deg,#0f4c75,#3282b8,#bbe1fa);
-  display:flex;flex-direction:column;
-  justify-content:center;align-items:center;
-  color:#fff;z-index:1000
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Montserrat', sans-serif;
 }
-#splash h1{font-size:32px;font-weight:700}
-#splash p{margin-top:8px;opacity:.85}
 
-/* LOGIN */
-#login,#app{display:none;padding:20px}
-.login-box{
-  max-width:360px;margin:80px auto;
-  background:#fff;border-radius:20px;
-  padding:25px;box-shadow:0 10px 25px rgba(0,0,0,.1)
+body {
+  background: linear-gradient(135deg, #F5F7FA 0%, #E4E7EB 100%);
+  color: var(--primary-dark);
+  min-height: 100vh;
+  padding: 20px;
+  position: relative;
 }
-.login-box h2{text-align:center;margin-bottom:20px}
-button{
-  width:100%;padding:14px;border:none;
-  border-radius:14px;font-weight:600;
-  background:#007aff;color:#fff;margin-bottom:12px;
-  cursor:pointer
-}
-button.secondary{
-  background:#e5e5ea;color:#000
-}
-button.secondary.selected{
-  background:#007aff;
-  color:#fff;
-  border:2px solid #0056cc;
-}
-#loginMsg{color:red;text-align:center;font-size:14px}
 
-/* APP HEADER */
-.user-info {
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+p, span, small {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* ===== SPLASH SCREEN ===== */
+#splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-blue) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--white);
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+#splash.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-content {
+  text-align: center;
+  animation: fadeInUp 0.8s ease;
+}
+
+#splash h1 {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #FFFFFF 0%, #E0E7FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#splash p {
+  font-size: 16px;
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+/* ===== LOGIN SCREEN ===== */
+#login {
+  display: none;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-top: 60px;
+}
+
+.login-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-lg);
+  padding: 48px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.login-header h2 {
+  font-size: 32px;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.login-header p {
+  color: var(--light-blue);
+  font-size: 16px;
+}
+
+.user-selection {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.user-btn {
+  background: var(--white);
+  border: 2px solid rgba(139, 151, 167, 0.1);
+  border-radius: var(--border-radius);
+  padding: 20px 24px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--primary-dark);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-blue);
+  box-shadow: var(--shadow-light);
+}
+
+.user-btn.selected {
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  color: var(--white);
+  border-color: transparent;
+}
+
+.user-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.user-btn:not(.selected) .user-icon {
+  background: rgba(139, 151, 167, 0.1);
+}
+
+#loginMsg {
+  text-align: center;
+  color: var(--error);
+  font-size: 14px;
+  min-height: 20px;
+}
+
+/* ===== MAIN APP ===== */
+#app {
+  display: none;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===== APP HEADER ===== */
+.app-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 5px 15px rgba(0,0,0,.06);
+  margin-bottom: 16px;
 }
 
-.view-toggle-btn {
-  padding: 8px 16px;
-  background: #34c759;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  margin-right: 10px;
-}
-
-.view-toggle-btn.conjunta {
-  background: #af52de;
-}
-
-.recordatorios-btn {
-  padding: 8px 16px;
-  background: #ff9500;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  margin-right: 10px;
-}
-
-.logout-btn {
-  padding: 8px 16px;
-  background: #ff3b30;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
+.welcome-section h3 {
+  font-size: 20px;
+  color: var(--primary-dark);
+  margin-bottom: 6px;
 }
 
 .user-badges {
   display: flex;
   gap: 8px;
-  margin-top: 5px;
 }
 
 .user-badge {
-  background: #e5f0ff;
-  color: #007aff;
-  padding: 4px 8px;
-  border-radius: 10px;
-  font-size: 12px;
+  background: rgba(65, 137, 237, 0.1);
+  color: var(--primary-blue);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* MODALES */
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.view-toggle-btn {
+  background: linear-gradient(135deg, var(--success) 0%, #2ECC71 100%);
+  color: var(--white);
+}
+
+.view-toggle-btn.conjunta {
+  background: linear-gradient(135deg, #AF52DE 0%, #9B51E0 100%);
+}
+
+.recordatorios-btn {
+  background: var(--warning);
+  color: var(--white);
+}
+
+.logout-btn {
+  background: var(--error);
+  color: var(--white);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* ===== DASHBOARD CARDS (MÁS PEQUEÑAS) ===== */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-3px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.ingreso .card-icon {
+  background: rgba(52, 199, 89, 0.1);
+  color: var(--success);
+}
+
+.gasto .card-icon {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--error);
+}
+
+.saldo .card-icon {
+  background: rgba(65, 137, 237, 0.1);
+  color: var(--primary-blue);
+}
+
+.card-header span {
+  font-size: 14px;
+  color: var(--light-blue);
+  font-weight: 500;
+}
+
+.card-amount {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.card-trend {
+  font-size: 12px;
+  color: var(--light-blue);
+  margin-top: auto;
+}
+
+/* ===== MAIN CONTENT GRID ===== */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== FORM CARD ===== */
+.form-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-card h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: var(--primary-dark);
+}
+
+.segmented-control {
+  display: flex;
+  background: rgba(139, 151, 167, 0.1);
+  border-radius: var(--border-radius-sm);
+  padding: 4px;
+  margin-bottom: 20px;
+}
+
+.segmented-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  font-weight: 600;
+  color: var(--light-blue);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.segmented-btn.active {
+  background: var(--white);
+  color: var(--primary-dark);
+  box-shadow: var(--shadow-light);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--primary-dark);
+  font-size: 13px;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 14px;
+  background: rgba(139, 151, 167, 0.05);
+  border: 2px solid rgba(139, 151, 167, 0.1);
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
+  color: var(--primary-dark);
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  background: var(--white);
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.quick-amounts {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quick-amount-btn {
+  flex: 1;
+  padding: 10px;
+  background: rgba(65, 137, 237, 0.1);
+  border: 2px solid rgba(65, 137, 237, 0.2);
+  border-radius: var(--border-radius-sm);
+  color: var(--primary-blue);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 13px;
+}
+
+.quick-amount-btn:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+.photo-section {
+  margin-bottom: 20px;
+}
+
+.photo-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(52, 199, 89, 0.1);
+  border: 2px solid rgba(52, 199, 89, 0.2);
+  border-radius: var(--border-radius-sm);
+  color: var(--success);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.photo-btn:hover {
+  background: var(--success);
+  color: var(--white);
+}
+
+.photo-preview {
+  width: 100%;
+  height: 180px;
+  border-radius: var(--border-radius-sm);
+  object-fit: cover;
+  margin-top: 14px;
+  display: none;
+  border: 2px solid rgba(139, 151, 167, 0.1);
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--white);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* ===== CHART CARD ===== */
+.chart-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chart-header h2 {
+  font-size: 20px;
+  color: var(--primary-dark);
+}
+
+.chart-container {
+  height: 280px;
+  position: relative;
+}
+
+/* ===== MOVEMENTS LIST ===== */
+.movements-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  grid-column: 1 / -1;
+}
+
+.movements-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.movements-header h2 {
+  font-size: 20px;
+  color: var(--primary-dark);
+}
+
+.filter-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-btn {
+  padding: 6px 14px;
+  background: rgba(139, 151, 167, 0.1);
+  border: none;
+  border-radius: 20px;
+  color: var(--light-blue);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
+}
+
+.filter-btn.active {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+.movements-list {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.movement-item {
+  background: rgba(245, 247, 250, 0.5);
+  border-radius: var(--border-radius-sm);
+  padding: 18px;
+  margin-bottom: 10px;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.movement-item:hover {
+  transform: translateX(4px);
+  background: var(--white);
+}
+
+.movement-item.ingreso {
+  border-left-color: var(--success);
+}
+
+.movement-item.gasto {
+  border-left-color: var(--error);
+}
+
+.movement-item.movimiento-eliminado {
+  opacity: 0.6;
+  border-left-color: var(--light-blue);
+}
+
+.movement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.movement-info h4 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.movement-category {
+  color: var(--light-blue);
+  font-size: 13px;
+}
+
+.movement-amount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.ingreso .movement-amount {
+  color: var(--success);
+}
+
+.gasto .movement-amount {
+  color: var(--error);
+}
+
+.movement-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(139, 151, 167, 0.1);
+}
+
+.movement-meta {
+  display: flex;
+  gap: 14px;
+}
+
+.movement-date, .movement-user {
+  color: var(--light-blue);
+  font-size: 13px;
+}
+
+.movement-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.action-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(139, 151, 167, 0.1);
+  color: var(--light-blue);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.action-icon-btn:hover {
+  background: var(--primary-blue);
+  color: var(--white);
+}
+
+.delete-btn:hover {
+  background: var(--error);
+}
+
+.restore-btn:hover {
+  background: var(--success);
+}
+
+.photo-btn-small:hover {
+  background: var(--warning);
+}
+
+/* ===== MODALES ===== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(35, 42, 57, 0.8);
+  backdrop-filter: blur(8px);
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 1000;
+  padding: 20px;
 }
 
 .modal {
-  background: white;
-  border-radius: 20px;
-  width: 90%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-lg);
+  width: 100%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: modalSlideIn 0.3s ease;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
+  padding: 20px 28px;
+  border-bottom: 1px solid rgba(139, 151, 167, 0.1);
 }
 
 .modal-header h2 {
-  margin: 0;
-  color: #1c1c1e;
+  font-size: 20px;
+  color: var(--primary-dark);
 }
 
 .close-modal {
-  background: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: none;
-  font-size: 24px;
+  background: rgba(139, 151, 167, 0.1);
+  color: var(--light-blue);
   cursor: pointer;
-  color: #666;
-  width: 40px;
-  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  transition: all 0.3s ease;
+  font-size: 20px;
 }
 
 .close-modal:hover {
-  background: #f2f2f7;
+  background: var(--error);
+  color: var(--white);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 28px;
 }
 
-/* CAMERA MODAL */
-.camera-container {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-#cameraVideo {
-  width: 100%;
-  border-radius: 12px;
-  background: #000;
-}
-
-.camera-controls {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.capture-btn {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #ff3b30;
-  border: 4px solid white;
-  box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
-  cursor: pointer;
-}
-
-#capturedImage {
-  width: 100%;
-  border-radius: 12px;
+/* ===== NOTIFICACIONES (NUEVO DISEÑO - CENTRO INFERIOR) ===== */
+.notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-sm);
+  padding: 12px 20px;
+  box-shadow: 0 4px 20px rgba(35, 42, 57, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1000;
   display: none;
-}
-
-/* FILTER CONTROLS */
-.filter-controls {
-  display: flex;
+  align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+  max-width: 320px;
+  width: 90%;
+  animation: slideUpFromBottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  border-top: 3px solid transparent;
 }
 
-.filter-btn {
-  padding: 8px 16px;
-  background: #e5e5ea;
-  color: #1c1c1e;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
+.notification.success {
+  border-top-color: var(--success);
 }
 
-.filter-btn.active {
-  background: #007aff;
-  color: white;
+.notification.error {
+  border-top-color: var(--error);
 }
 
-/* DASHBOARD */
-h1{text-align:center;margin-bottom:20px}
-.dashboard{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:15px;margin-bottom:25px
-}
-.card{
-  border-radius:20px;padding:20px;color:#fff;
-  box-shadow:0 10px 25px rgba(0,0,0,.08)
-}
-.ingreso{background:linear-gradient(135deg,#34c759,#2ecc71)}
-.gasto{background:linear-gradient(135deg,#ff3b30,#ff6b6b)}
-.saldo{background:linear-gradient(135deg,#007aff,#5ac8fa)}
-
-/* FORM */
-form{
-  background:#fff;border-radius:20px;padding:25px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-  margin-bottom:25px
-}
- 
-.segmented{display:flex;background:#eee;border-radius:14px;margin-bottom:15px}
-.segmented button{
-  flex:1;border:none;padding:12px;
-  background:none;font-weight:600;cursor:pointer
-}
-.segmented .active{background:#007aff;color:#fff}
- 
-input,select,textarea{
-  width:100%;padding:14px;border-radius:14px;
-  border:1px solid #ccc;margin-bottom:12px
-}
- 
-.increment{
-  background:#e5f0ff;color:#007aff;
-  border:none;padding:10px;border-radius:12px;
-  cursor:pointer;font-weight:600;margin-bottom:12px
+.notification.warning {
+  border-top-color: var(--warning);
 }
 
-.photo-btn {
-  background: #34c759;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  margin-bottom: 12px;
+.notification-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
-.photo-preview {
-  width: 100px;
-  height: 100px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 2px solid #ccc;
-  margin-bottom: 12px;
-  display: none;
-}
- 
-.submit{
-  width:100%;padding:14px;
-  border:none;border-radius:16px;
-  background:linear-gradient(135deg,#007aff,#5ac8fa);
-  color:#fff;font-weight:600;font-size:16px
+.notification.success .notification-icon {
+  background: rgba(52, 199, 89, 0.1);
+  color: var(--success);
 }
 
-/* CHART & MOVEMENTS */
-canvas{
-  background:#fff;border-radius:20px;
-  padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);
-  margin-bottom:25px
-}
- 
-ul{list-style:none}
-li{
-  background:#fff;border-radius:16px;
-  padding:15px;margin-bottom:10px;
-  box-shadow:0 5px 15px rgba(0,0,0,.06);
-  position: relative;
+.notification.error .notification-icon {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--error);
 }
 
-li.movimiento-eliminado {
-  opacity: 0.6;
-  background: #f9f9f9;
-  border-left: 5px solid #cccccc;
+.notification.warning .notification-icon {
+  background: rgba(255, 149, 0, 0.1);
+  color: var(--warning);
 }
 
-li.movimiento-eliminado::after {
-  content: "❌ ELIMINADO";
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: #ff3b30;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: bold;
+.notification-content {
+  flex: 1;
+  min-width: 0;
 }
 
-li.ingreso{border-left:5px solid #34c759}
-li.gasto{border-left:5px solid #ff3b30}
-small{color:#666}
-.user-tag {
-  display: inline-block;
-  background: #e5e5ea;
-  color: #000;
-  padding: 2px 8px;
-  border-radius: 10px;
+.notification-content p {
+  font-weight: 500;
+  font-size: 13px;
+  margin: 0;
+  color: var(--primary-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notification-content small {
+  color: var(--light-blue);
   font-size: 11px;
-  margin-left: 5px;
-  font-weight: 600;
-}
-
-.movement-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.delete-movement-btn {
-  background: #ff3b30;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.restore-movement-btn {
-  background: #34c759;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.view-photo-btn {
-  background: #007aff;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  display: none;
-}
-
-.movement-has-photo .view-photo-btn {
-  display: inline-block;
-}
-
-/* REMINDERS LIST */
-.reminders-list {
-  margin-top: 20px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.reminder-item {
-  background: #fff;
-  border-radius: 16px;
-  padding: 15px;
-  margin-bottom: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,.06);
-  border-left: 5px solid #ff9500;
-  transition: transform 0.2s ease;
-}
-
-.reminder-item:hover {
-  transform: translateY(-2px);
-}
-
-.reminder-item.vencido {
-  border-left: 5px solid #ff3b30;
-  background: #fff5f5;
-}
-
-.reminder-item.proximo {
-  border-left: 5px solid #ff9500;
-  background: #fff9f0;
-}
-
-.reminder-item.normal {
-  border-left: 5px solid #34c759;
-  background: #f8fff9;
-}
-
-.reminder-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.reminder-type {
-  background: #ff9500;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.reminder-dates {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font-size: 12px;
-}
-
-.reminder-date {
-  color: #666;
-}
-
-.reminder-due-date {
-  font-weight: 600;
+  display: block;
   margin-top: 2px;
 }
 
-.reminder-due-date.vencido {
-  color: #ff3b30;
-}
-
-.reminder-due-date.proximo {
-  color: #ff9500;
-}
-
-.reminder-due-date.normal {
-  color: #34c759;
-}
-
-.reminder-text {
-  color: #1c1c1e;
-  line-height: 1.4;
-  margin: 10px 0;
-}
-
-.reminder-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.delete-reminder {
-  background: #ff3b30;
-  color: white;
+.notification-close {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   border: none;
-  padding: 4px 12px;
-  border-radius: 12px;
+  background: rgba(139, 151, 167, 0.1);
+  color: var(--light-blue);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
   font-size: 12px;
-  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 5px;
 }
 
-.empty-reminders {
-  text-align: center;
-  color: #666;
-  padding: 20px;
-  font-style: italic;
+.notification-close:hover {
+  background: var(--error);
+  color: var(--white);
 }
 
-/* NOTIFICATION */
-.notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #34c759;
-  color: white;
-  padding: 15px 20px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,.2);
-  z-index: 1000;
-  display: none;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInUp {
   from {
-    transform: translateX(100%);
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* PHOTO VIEWER */
-.photo-viewer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.photo-viewer img {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 10px;
+@keyframes slideUpFromBottom {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
-.close-photo-viewer {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #ff3b30;
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
+@keyframes slideDownToBottom {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(100px);
+  }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(139, 151, 167, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 151, 167, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 151, 167, 0.5);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .content-grid {
+    gap: 16px;
+  }
+  
+  .dashboard {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  
+  .dashboard-card {
+    padding: 16px;
+  }
+  
+  .card-amount {
+    font-size: 20px;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .movements-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .filter-controls {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  
+  .notification {
+    width: 95%;
+    max-width: 280px;
+    padding: 10px 16px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<!-- NOTIFICATION -->
-<div class="notification" id="notification"></div>
+<!-- NOTIFICACIÓN (NUEVO DISEÑO) -->
+<div class="notification" id="notification">
+  <div class="notification-icon" id="notificationIcon">✓</div>
+  <div class="notification-content">
+    <p id="notificationTitle">¡Éxito!</p>
+    <small id="notificationMessage">Operación completada correctamente</small>
+  </div>
+  <button class="notification-close" onclick="closeNotification()">×</button>
+</div>
 
-<!-- CAMERA MODAL -->
+<!-- MODAL CÁMARA -->
 <div class="modal-overlay" id="cameraModal">
   <div class="modal">
     <div class="modal-header">
-      <h2>📸 Tomar foto de factura</h2>
+      <h2>📸 Capturar Factura</h2>
       <button class="close-modal" onclick="closeCameraModal()">×</button>
     </div>
     <div class="modal-body">
       <div class="camera-container">
-        <video id="cameraVideo" autoplay playsinline></video>
+        <video id="cameraVideo" autoplay playsinline style="width: 100%; border-radius: 12px; background: #000;"></video>
         <canvas id="cameraCanvas" style="display:none"></canvas>
-        <img id="capturedImage" alt="Foto capturada">
+        <img id="capturedImage" alt="Foto capturada" style="width: 100%; border-radius: 12px; display: none;">
         
-        <div class="camera-controls">
-          <button class="capture-btn" id="captureBtn" onclick="capturePhoto()"></button>
+        <div style="display: flex; gap: 15px; margin-top: 20px; justify-content: center;">
+          <button class="action-btn" style="background: var(--primary-blue);" id="captureBtn" onclick="capturePhoto()">
+            Capturar Foto
+          </button>
         </div>
         
-        <div style="margin-top: 20px; display: none;" id="photoActions">
-          <button onclick="retakePhoto()" style="margin-right: 10px;">Tomar otra</button>
-          <button onclick="usePhoto()">Usar esta foto</button>
+        <div style="margin-top: 20px; display: none; text-align: center;" id="photoActions">
+          <button class="action-btn" style="background: var(--light-blue); margin-right: 10px;" onclick="retakePhoto()">Tomar Otra</button>
+          <button class="action-btn" style="background: var(--success);" onclick="usePhoto()">Usar Esta Foto</button>
         </div>
       </div>
     </div>
   </div>
-</div>
-
-<!-- PHOTO VIEWER -->
-<div class="photo-viewer" id="photoViewer">
-  <button class="close-photo-viewer" onclick="closePhotoViewer()">×</button>
-  <img id="fullSizePhoto" alt="Foto completa">
 </div>
 
 <!-- MODAL RECORDATORIOS -->
@@ -614,142 +1042,245 @@ small{color:#666}
     </div>
     <div class="modal-body">
       <form id="reminderForm">
-        <select id="reminderType" required>
-          <option value="">Selecciona un tipo</option>
-          <option value="Casa">🏠 Casa</option>
-          <option value="Estudio">📚 Estudio</option>
-          <option value="Trabajo">💼 Trabajo</option>
-          <option value="Familia">👨‍👩‍👧‍👦 Familia</option>
-          <option value="Viaje">✈️ Viaje</option>
-          <option value="Entretenimiento">🎬 Entretenimiento</option>
-          <option value="Salud">🏥 Salud</option>
-          <option value="Finanzas">💰 Finanzas</option>
-          <option value="Otro">📌 Otro</option>
-        </select>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="reminderType" required>
+            <option value="">Selecciona un tipo</option>
+            <option value="Casa">🏠 Casa</option>
+            <option value="Estudio">📚 Estudio</option>
+            <option value="Trabajo">💼 Trabajo</option>
+            <option value="Familia">👨‍👩‍👧‍👦 Familia</option>
+            <option value="Viaje">✈️ Viaje</option>
+            <option value="Entretenimiento">🎬 Entretenimiento</option>
+            <option value="Salud">🏥 Salud</option>
+            <option value="Finanzas">💰 Finanzas</option>
+            <option value="Otro">📌 Otro</option>
+          </select>
+        </div>
         
-        <textarea 
-          id="reminderText" 
-          rows="4" 
-          placeholder="Escribe tu recordatorio aquí..."
-          required
-        ></textarea>
+        <div class="form-group">
+          <label class="form-label">Texto del Recordatorio</label>
+          <textarea class="form-textarea" id="reminderText" rows="4" placeholder="Escribe tu recordatorio aquí..." required></textarea>
+        </div>
         
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1c1c1e;">
-          Fecha de vencimiento (opcional):
-        </label>
-        <input 
-          type="date" 
-          id="reminderDueDate"
-          min="2024-01-01"
-          style="margin-bottom: 20px;"
-        >
+        <div class="form-group">
+          <label class="form-label">Fecha de Vencimiento (Opcional)</label>
+          <input type="date" class="form-input" id="reminderDueDate" min="2024-01-01">
+        </div>
         
-        <button type="submit" class="submit">Guardar Recordatorio</button>
+        <button class="submit-btn" type="submit">Guardar Recordatorio</button>
       </form>
       
-      <div class="filter-controls" id="reminderFilters">
-        <button class="filter-btn active" onclick="filterReminders('criticos')">
-          Más críticos
-        </button>
-        <button class="filter-btn" onclick="filterReminders('todos')">
-          Todos
-        </button>
-        <button class="filter-btn" onclick="filterReminders('vencidos')">
-          Vencidos
-        </button>
-        <button class="filter-btn" onclick="filterReminders('proximos')">
-          Próximos
-        </button>
-        <button class="filter-btn" onclick="filterReminders('sinFecha')">
-          Sin fecha
-        </button>
+      <div class="filter-controls" style="margin-top: 24px;" id="reminderFilters">
+        <button class="filter-btn active" onclick="filterReminders('criticos')">Más Críticos</button>
+        <button class="filter-btn" onclick="filterReminders('todos')">Todos</button>
+        <button class="filter-btn" onclick="filterReminders('vencidos')">Vencidos</button>
+        <button class="filter-btn" onclick="filterReminders('proximos')">Próximos</button>
+        <button class="filter-btn" onclick="filterReminders('sinFecha')">Sin Fecha</button>
       </div>
       
-      <div class="reminders-list" id="remindersList">
+      <div class="reminders-list" id="remindersList" style="margin-top: 20px; max-height: 300px; overflow-y: auto; padding: 16px; background: rgba(139, 151, 167, 0.05); border-radius: var(--border-radius-sm);">
         <!-- Los recordatorios se cargarán aquí -->
       </div>
     </div>
   </div>
 </div>
 
+<!-- VISOR DE FOTOS -->
+<div class="modal-overlay" id="photoViewer">
+  <div class="modal" style="max-width: 800px;">
+    <div class="modal-header">
+      <h2>📄 Factura</h2>
+      <button class="close-modal" onclick="closePhotoViewer()">×</button>
+    </div>
+    <div class="modal-body">
+      <img id="fullSizePhoto" alt="Foto completa" style="width: 100%; border-radius: var(--border-radius-sm);">
+    </div>
+  </div>
+</div>
+
 <!-- SPLASH -->
 <div id="splash">
-  <h1>MarSol Cost Control</h1>
-  <p>Versión 1.6 · 2026</p>
+  <div class="splash-content">
+    <h1>MarSol</h1>
+    <p>Sistema de Control Financiero · Versión 1.6</p>
+  </div>
 </div>
 
 <!-- LOGIN -->
 <div id="login">
-  <div class="login-box">
-    <h2>Selecciona tu perfil</h2>
-    <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 14px;">
-      Haz clic en tu nombre para ingresar
-    </p>
-
-    <button class="secondary" id="btnAna" onclick="loginUser('ana')">Ana María</button>
-    <button class="secondary" id="btnCamilo" onclick="loginUser('camilo')">Camilo Andrés</button>
-
+  <div class="login-container">
+    <div class="login-header">
+      <h2>Bienvenido de Nuevo</h2>
+      <p>Selecciona tu perfil para continuar</p>
+    </div>
+    
+    <div class="user-selection">
+      <button class="user-btn" id="btnAna" onclick="loginUser('ana')">
+        <div class="user-icon">👩</div>
+        <div>
+          <div style="font-weight: 600;">Ana María</div>
+          <small style="opacity: 0.7;">Cuenta Personal</small>
+        </div>
+      </button>
+      
+      <button class="user-btn" id="btnCamilo" onclick="loginUser('camilo')">
+        <div class="user-icon">👨</div>
+        <div>
+          <div style="font-weight: 600;">Camilo Andrés</div>
+          <small style="opacity: 0.7;">Cuenta Personal</small>
+        </div>
+      </button>
+    </div>
+    
     <p id="loginMsg"></p>
   </div>
 </div>
 
-<!-- APP -->
+<!-- APLICACIÓN PRINCIPAL -->
 <div id="app">
-  <div class="user-info">
-    <div>
-      <h3 id="welcomeUser">Bienvenido/a</h3>
-      <div class="user-badges" id="userBadges">
-        <!-- Badges de usuarios activos se agregarán aquí -->
+  <!-- ENCABEZADO -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="welcome-section">
+        <h3 id="welcomeUser">Bienvenido/a</h3>
+        <div class="user-badges" id="userBadges"></div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="action-btn view-toggle-btn" id="viewToggleBtn" onclick="toggleView()">
+          <span>👥</span>
+          <span id="viewToggleText">Visual Conjunta</span>
+        </button>
+        <button class="action-btn recordatorios-btn" onclick="openRemindersModal()">
+          <span>📝</span>
+          <span>Recordatorios</span>
+        </button>
+        <button class="action-btn logout-btn" onclick="logout()">
+          <span>↩️</span>
+          <span>Cerrar Sesión</span>
+        </button>
       </div>
     </div>
-    <div>
-      <button class="view-toggle-btn" id="viewToggleBtn" onclick="toggleView()">Visual conjunta</button>
-      <button class="recordatorios-btn" onclick="openRemindersModal()">Recordatorios</button>
-      <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
-    </div>
-  </div>
+  </header>
 
-  <h1>MARSOL 💰</h1>
-
+  <!-- DASHBOARD (MÁS PEQUEÑO) -->
   <div class="dashboard">
-    <div class="card ingreso"><span>Ingresos</span><h2 id="totalIngresos">COP 0</h2></div>
-    <div class="card gasto"><span>Gastos</span><h2 id="totalGastos">COP 0</h2></div>
-    <div class="card saldo"><span>Saldo</span><h2 id="saldo">COP 0</h2></div>
+    <div class="dashboard-card ingreso">
+      <div class="card-header">
+        <div class="card-icon">↑</div>
+        <span>INGRESOS</span>
+      </div>
+      <div class="card-amount" id="totalIngresos">COP 0</div>
+      <div class="card-trend">Ingresos totales registrados</div>
+    </div>
+    
+    <div class="dashboard-card gasto">
+      <div class="card-header">
+        <div class="card-icon">↓</div>
+        <span>GASTOS</span>
+      </div>
+      <div class="card-amount" id="totalGastos">COP 0</div>
+      <div class="card-trend">Gastos totales registrados</div>
+    </div>
+    
+    <div class="dashboard-card saldo">
+      <div class="card-header">
+        <div class="card-icon">$</div>
+        <span>SALDO</span>
+      </div>
+      <div class="card-amount" id="saldo">COP 0</div>
+      <div class="card-trend">Saldo disponible actual</div>
+    </div>
   </div>
 
-  <form id="formulario">
-    <div class="segmented">
-      <button type="button" id="btnIngreso" class="active">Ingreso</button>
-      <button type="button" id="btnGasto">Gasto</button>
+  <!-- CONTENIDO PRINCIPAL -->
+  <div class="content-grid">
+    <!-- TARJETA DE FORMULARIO -->
+    <div class="form-card">
+      <h2>Registrar Movimiento</h2>
+      
+      <div class="segmented-control">
+        <button type="button" class="segmented-btn active" id="btnIngreso">Ingreso</button>
+        <button type="button" class="segmented-btn" id="btnGasto">Gasto</button>
+      </div>
+      
+      <form id="formulario">
+        <div class="form-group">
+          <label class="form-label">Monto (COP)</label>
+          <input type="number" class="form-input" id="monto" placeholder="0" required>
+        </div>
+        
+        <div class="quick-amounts">
+          <button type="button" class="quick-amount-btn" onclick="addAmount(50000)">+50K</button>
+          <button type="button" class="quick-amount-btn" onclick="addAmount(100000)">+100K</button>
+          <button type="button" class="quick-amount-btn" onclick="addAmount(200000)">+200K</button>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Categoría Principal</label>
+          <select class="form-select" id="catNivel1" required>
+            <option value="">Selecciona categoría principal</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Subcategoría</label>
+          <select class="form-select" id="catNivel2" required>
+            <option value="">Selecciona subcategoría</option>
+          </select>
+        </div>
+        
+        <div class="form-group" id="photoSection" style="display: none;">
+          <label class="form-label">Foto de Factura (Opcional)</label>
+          <button type="button" class="photo-btn" id="takePhotoBtn" onclick="openCameraModal()">
+            <span>📸</span>
+            <span>Tomar Foto</span>
+          </button>
+          <img id="photoPreview" class="photo-preview" alt="Vista previa de foto">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-textarea" id="observacion" placeholder="Agrega información adicional..."></textarea>
+        </div>
+        
+        <button class="submit-btn" type="submit">Registrar Movimiento</button>
+      </form>
     </div>
 
-    <input type="number" id="monto" placeholder="Monto COP" required>
-    <button type="button" class="increment" id="add100">+ 100.000</button>
+    <!-- TARJETA DE GRÁFICO -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2>Resumen Financiero</h2>
+      </div>
+      <div class="chart-container">
+        <canvas id="grafico"></canvas>
+      </div>
+    </div>
+  </div>
 
-    <select id="catNivel1" required>
-      <option value="">Categoría principal</option>
-    </select>
-
-    <select id="catNivel2" required>
-      <option value="">Subcategoría</option>
-    </select>
-
-    <!-- Botón para tomar foto (solo visible en gastos) -->
-    <button type="button" class="photo-btn" id="takePhotoBtn" onclick="openCameraModal()" style="display: none;">
-      📸 Tomar foto de factura
-    </button>
+  <!-- LISTA DE MOVIMIENTOS -->
+  <div class="movements-card">
+    <div class="movements-header">
+      <h2>Movimientos Recientes</h2>
+      <div class="filter-controls">
+        <button class="filter-btn active">Todos</button>
+        <button class="filter-btn">Ingresos</button>
+        <button class="filter-btn">Gastos</button>
+        <button class="filter-btn">Activos</button>
+      </div>
+    </div>
     
-    <!-- Vista previa de la foto -->
-    <img id="photoPreview" class="photo-preview" alt="Vista previa de foto">
-
-    <textarea id="observacion" rows="3" placeholder="Observaciones (opcional)"></textarea>
-
-    <button class="submit" type="submit">Registrar</button>
-  </form>
-
-  <canvas id="grafico"></canvas>
-
-  <ul id="listaMovimientos"></ul>
+    <div class="movements-list" id="listaMovimientos">
+      <!-- Los movimientos se cargarán aquí -->
+      <div style="text-align: center; padding: 48px; color: var(--light-blue);">
+        <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+        <h3 style="margin-bottom: 8px;">No hay movimientos aún</h3>
+        <p>Comienza registrando tu primer ingreso o gasto</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Firebase -->
@@ -758,33 +1289,7 @@ small{color:#666}
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
-/* ===== DOM ===== */
-const splash = document.getElementById("splash");
-const login = document.getElementById("login");
-const app = document.getElementById("app");
-const loginMsg = document.getElementById("loginMsg");
-const welcomeUser = document.getElementById("welcomeUser");
-const notification = document.getElementById("notification");
-const btnAna = document.getElementById("btnAna");
-const btnCamilo = document.getElementById("btnCamilo");
-const viewToggleBtn = document.getElementById("viewToggleBtn");
-const userBadges = document.getElementById("userBadges");
-const remindersModal = document.getElementById("remindersModal");
-const remindersList = document.getElementById("remindersList");
-const reminderForm = document.getElementById("reminderForm");
-const reminderFilters = document.getElementById("reminderFilters");
-const cameraModal = document.getElementById("cameraModal");
-const cameraVideo = document.getElementById("cameraVideo");
-const cameraCanvas = document.getElementById("cameraCanvas");
-const capturedImage = document.getElementById("capturedImage");
-const captureBtn = document.getElementById("captureBtn");
-const photoActions = document.getElementById("photoActions");
-const takePhotoBtn = document.getElementById("takePhotoBtn");
-const photoPreview = document.getElementById("photoPreview");
-const photoViewer = document.getElementById("photoViewer");
-const fullSizePhoto = document.getElementById("fullSizePhoto");
-
-/* ===== FIREBASE ===== */
+// ===== CONFIGURACIÓN FIREBASE =====
 firebase.initializeApp({
   apiKey: "AIzaSyDYD0OBJKdZ14-mvzEpN85M5_glF92WE_g",
   authDomain: "formulario-github.firebaseapp.com",
@@ -794,7 +1299,7 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-/* ===== VARIABLES GLOBALES ===== */
+// ===== VARIABLES GLOBALES =====
 let currentUser = null;
 let chart = null;
 let appInitialized = false;
@@ -805,61 +1310,117 @@ let currentReminderFilter = 'criticos';
 let allReminders = [];
 let currentPhotoBlob = null;
 let cameraStream = null;
-let tipo = "Ingreso"; // Variable para tipo de movimiento
+let tipo = "Ingreso";
+let notificationTimeout = null;
 
-/* ===== FUNCIONES UTILES ===== */
-function showNotification(message, type = 'success') {
-  notification.textContent = message;
-  notification.style.background = type === 'success' ? '#34c759' : '#ff3b30';
-  notification.style.display = 'block';
+// ===== FUNCIONES UTILES =====
+function showNotification(message, type = 'success', duration = 3000) {
+  const notification = document.getElementById('notification');
+  const notificationIcon = document.getElementById('notificationIcon');
+  const notificationTitle = document.getElementById('notificationTitle');
+  const notificationMessage = document.getElementById('notificationMessage');
   
-  setTimeout(() => {
-    notification.style.display = 'none';
-  }, 3000);
+  // Limpiar timeout anterior si existe
+  if (notificationTimeout) {
+    clearTimeout(notificationTimeout);
+    notificationTimeout = null;
+  }
+  
+  // Configurar estilo según tipo
+  notification.className = `notification ${type}`;
+  
+  // Configurar icono según tipo
+  let icon = "✓";
+  let title = "¡Éxito!";
+  
+  switch(type) {
+    case 'success':
+      icon = "✓";
+      title = "¡Éxito!";
+      break;
+    case 'error':
+      icon = "✕";
+      title = "¡Error!";
+      break;
+    case 'warning':
+      icon = "⚠";
+      title = "¡Advertencia!";
+      break;
+  }
+  
+  notificationIcon.textContent = icon;
+  notificationTitle.textContent = title;
+  notificationMessage.textContent = message;
+  
+  // Mostrar notificación
+  notification.style.display = 'flex';
+  notification.style.animation = 'slideUpFromBottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+  
+  // Ocultar automáticamente después de la duración especificada
+  notificationTimeout = setTimeout(() => {
+    closeNotification();
+  }, duration);
 }
 
-/* ===== SPLASH ===== */
-// Mostrar splash al inicio
-setTimeout(() => {
-  splash.style.display = "none";
-  showLogin();
-}, 1500);
-
-/* ===== AUTH ===== */
-const USER_NAMES = {
-  ana: "Ana María",
-  camilo: "Camilo Andrés"
-};
-
-const USER_COLORS = {
-  ana: "#007aff",
-  camilo: "#ff3b30"
-};
-
-function showSplash() {
-  // Mostrar splash
-  splash.style.display = "flex";
-  app.style.display = "none";
-  login.style.display = "none";
+function closeNotification() {
+  const notification = document.getElementById('notification');
   
-  // Ocultar splash después de 1.5 segundos y mostrar login
+  // Aplicar animación de salida
+  notification.style.animation = 'slideDownToBottom 0.3s ease forwards';
+  
+  // Ocultar después de la animación
   setTimeout(() => {
-    splash.style.display = "none";
-    showLogin();
+    notification.style.display = 'none';
+    // Resetear animación para la próxima vez
+    notification.style.animation = '';
+  }, 300);
+  
+  // Limpiar timeout
+  if (notificationTimeout) {
+    clearTimeout(notificationTimeout);
+    notificationTimeout = null;
+  }
+}
+
+function addAmount(amount) {
+  const montoInput = document.getElementById('monto');
+  const currentValue = parseInt(montoInput.value) || 0;
+  montoInput.value = currentValue + amount;
+  montoInput.focus();
+}
+
+// ===== MANEJO DEL SPLASH =====
+function showSplash() {
+  const splash = document.getElementById('splash');
+  splash.style.display = 'flex';
+  splash.classList.remove('fade-out');
+  
+  // Ocultar otras secciones
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  
+  // Mostrar login después de 1.5 segundos
+  setTimeout(() => {
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.style.display = 'none';
+      showLogin();
+    }, 500);
   }, 1500);
 }
 
 function showLogin() {
-  login.style.display = "block";
-  app.style.display = "none";
+  document.getElementById('login').style.display = 'block';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('splash').style.display = 'none';
   currentUser = null;
   isConjuntaView = false;
-  loginMsg.textContent = "";
+  document.getElementById('loginMsg').textContent = "";
   appInitialized = false;
   
   // Resetear botones de selección
-  btnAna.classList.remove('selected');
-  btnCamilo.classList.remove('selected');
+  document.getElementById('btnAna').classList.remove('selected');
+  document.getElementById('btnCamilo').classList.remove('selected');
   
   // Destruir gráfico si existe
   if (chart) {
@@ -879,16 +1440,37 @@ function showLogin() {
   }
 }
 
+// ===== INICIALIZAR SPLASH AL CARGAR LA PÁGINA =====
+window.addEventListener('DOMContentLoaded', () => {
+  showSplash();
+});
+
+// ===== AUTENTICACIÓN =====
+const USER_NAMES = {
+  ana: "Ana María",
+  camilo: "Camilo Andrés"
+};
+
+const USER_COLORS = {
+  ana: "#007aff",
+  camilo: "#ff3b30"
+};
+
 function loginUser(user) {
   currentUser = user;
   
-  // Mostrar notificación de ingreso
-  showNotification(`✅ Ingresando como ${USER_NAMES[user]}`);
+  // Resaltar botón seleccionado
+  document.getElementById('btnAna').classList.remove('selected');
+  document.getElementById('btnCamilo').classList.remove('selected');
+  document.getElementById(`btn${user.charAt(0).toUpperCase() + user.slice(1)}`).classList.add('selected');
+  
+  // Mostrar notificación
+  showNotification(`Ingresando como ${USER_NAMES[user]}`, 'success');
   
   // Ocultar login y mostrar app
-  login.style.display = "none";
-  app.style.display = "block";
-  welcomeUser.textContent = `Bienvenido/a, ${USER_NAMES[currentUser]}`;
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('welcomeUser').textContent = `Bienvenido/a, ${USER_NAMES[currentUser]}`;
   
   // Actualizar badges
   updateUserBadges();
@@ -905,29 +1487,25 @@ function loginUser(user) {
 }
 
 function logout() {
-  currentUser = null;
-  isConjuntaView = false;
-  
-  // Mostrar notificación de cierre de sesión
-  showNotification("✅ Sesión cerrada correctamente");
-  
-  // Mostrar splash primero
+  showNotification("Sesión cerrada correctamente", 'success');
   showSplash();
 }
 
 function toggleView() {
   isConjuntaView = !isConjuntaView;
+  const viewToggleBtn = document.getElementById('viewToggleBtn');
+  const viewToggleText = document.getElementById('viewToggleText');
   
   if (isConjuntaView) {
-    viewToggleBtn.textContent = "Visual individual";
+    viewToggleText.textContent = "Visual Individual";
     viewToggleBtn.classList.add("conjunta");
-    welcomeUser.textContent = "Visualización conjunta";
-    showNotification("✅ Visualizando datos de ambos usuarios");
+    document.getElementById('welcomeUser').textContent = "Visualización Conjunta";
+    showNotification("Visualizando datos de ambos usuarios", 'success');
   } else {
-    viewToggleBtn.textContent = "Visual conjunta";
+    viewToggleText.textContent = "Visual Conjunta";
     viewToggleBtn.classList.remove("conjunta");
-    welcomeUser.textContent = `Bienvenido/a, ${USER_NAMES[currentUser]}`;
-    showNotification("✅ Visualizando datos individuales");
+    document.getElementById('welcomeUser').textContent = `Bienvenido/a, ${USER_NAMES[currentUser]}`;
+    showNotification("Visualizando datos individuales", 'success');
   }
   
   // Actualizar badges
@@ -938,61 +1516,54 @@ function toggleView() {
 }
 
 function updateUserBadges() {
+  const userBadges = document.getElementById('userBadges');
   userBadges.innerHTML = "";
   
   if (isConjuntaView) {
     // Mostrar ambos badges en visual conjunta
     const badgeAna = document.createElement("span");
     badgeAna.className = "user-badge";
-    badgeAna.textContent = "Ana María";
-    badgeAna.style.background = "#e5f0ff";
-    badgeAna.style.color = USER_COLORS.ana;
+    badgeAna.innerHTML = '👩 Ana María';
     userBadges.appendChild(badgeAna);
     
     const badgeCamilo = document.createElement("span");
     badgeCamilo.className = "user-badge";
-    badgeCamilo.textContent = "Camilo Andrés";
-    badgeCamilo.style.background = "#ffe5e5";
-    badgeCamilo.style.color = USER_COLORS.camilo;
+    badgeCamilo.innerHTML = '👨 Camilo Andrés';
     userBadges.appendChild(badgeCamilo);
   } else {
     // Mostrar solo el badge del usuario actual
     const badge = document.createElement("span");
     badge.className = "user-badge";
-    badge.textContent = USER_NAMES[currentUser];
-    badge.style.background = currentUser === 'ana' ? "#e5f0ff" : "#ffe5e5";
-    badge.style.color = USER_COLORS[currentUser];
+    badge.innerHTML = currentUser === 'ana' ? '👩 Ana María' : '👨 Camilo Andrés';
     userBadges.appendChild(badge);
   }
 }
 
-/* ===== CÁMARA Y FOTOS ===== */
+// ===== CÁMARA Y FOTOS =====
 async function openCameraModal() {
-  cameraModal.style.display = "flex";
-  cameraVideo.style.display = "block";
-  capturedImage.style.display = "none";
-  photoActions.style.display = "none";
+  document.getElementById('cameraModal').style.display = 'flex';
+  document.getElementById('cameraVideo').style.display = 'block';
+  document.getElementById('capturedImage').style.display = 'none';
+  document.getElementById('photoActions').style.display = 'none';
   
   try {
-    // Solicitar permisos de cámara
     cameraStream = await navigator.mediaDevices.getUserMedia({ 
       video: { 
-        facingMode: 'environment', // Usar cámara trasera si está disponible
+        facingMode: 'environment',
         width: { ideal: 1280 },
         height: { ideal: 720 }
       } 
     });
-    cameraVideo.srcObject = cameraStream;
+    document.getElementById('cameraVideo').srcObject = cameraStream;
   } catch (error) {
-    console.error("Error al acceder a la cámara:", error);
+    console.error("Error accediendo a la cámara:", error);
     showNotification("No se pudo acceder a la cámara", "error");
     closeCameraModal();
   }
 }
 
 function closeCameraModal() {
-  cameraModal.style.display = "none";
-  // Detener stream de cámara
+  document.getElementById('cameraModal').style.display = 'none';
   if (cameraStream) {
     cameraStream.getTracks().forEach(track => track.stop());
     cameraStream = null;
@@ -1000,382 +1571,58 @@ function closeCameraModal() {
 }
 
 function capturePhoto() {
-  const context = cameraCanvas.getContext('2d');
-  cameraCanvas.width = cameraVideo.videoWidth;
-  cameraCanvas.height = cameraVideo.videoHeight;
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('cameraCanvas');
+  const context = canvas.getContext('2d');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
   
-  // Capturar foto del video
-  context.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
   
-  // Convertir a blob
-  cameraCanvas.toBlob((blob) => {
+  canvas.toBlob((blob) => {
     currentPhotoBlob = blob;
-    
-    // Mostrar vista previa
     const imageUrl = URL.createObjectURL(blob);
-    capturedImage.src = imageUrl;
-    capturedImage.style.display = "block";
-    cameraVideo.style.display = "none";
-    photoActions.style.display = "block";
+    document.getElementById('capturedImage').src = imageUrl;
+    document.getElementById('capturedImage').style.display = 'block';
+    document.getElementById('cameraVideo').style.display = 'none';
+    document.getElementById('photoActions').style.display = 'block';
     
-    // Limpiar stream
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
       cameraStream = null;
     }
-  }, 'image/jpeg', 0.8); // Calidad 80%
+  }, 'image/jpeg', 0.8);
 }
 
 function retakePhoto() {
-  capturedImage.style.display = "none";
-  cameraVideo.style.display = "block";
-  photoActions.style.display = "none";
-  openCameraModal(); // Reabrir cámara
+  document.getElementById('capturedImage').style.display = 'none';
+  document.getElementById('cameraVideo').style.display = 'block';
+  document.getElementById('photoActions').style.display = 'none';
+  openCameraModal();
 }
 
 function usePhoto() {
   if (currentPhotoBlob) {
     const imageUrl = URL.createObjectURL(currentPhotoBlob);
-    photoPreview.src = imageUrl;
-    photoPreview.style.display = "block";
+    document.getElementById('photoPreview').src = imageUrl;
+    document.getElementById('photoPreview').style.display = 'block';
     closeCameraModal();
-    showNotification("✅ Foto capturada correctamente");
+    showNotification("Foto capturada correctamente", 'success');
   }
 }
 
 function openPhotoViewer(photoUrl) {
-  fullSizePhoto.src = photoUrl;
-  photoViewer.style.display = "flex";
+  document.getElementById('fullSizePhoto').src = photoUrl;
+  document.getElementById('photoViewer').style.display = 'flex';
 }
 
 function closePhotoViewer() {
-  photoViewer.style.display = "none";
+  document.getElementById('photoViewer').style.display = 'none';
 }
 
-async function uploadPhotoToStorage(blob) {
-  try {
-    const fileName = `facturas/${currentUser}/${Date.now()}.jpg`;
-    const storageRef = storage.ref();
-    const photoRef = storageRef.child(fileName);
-    
-    // Subir la foto
-    await photoRef.put(blob);
-    
-    // Obtener URL de descarga
-    const downloadURL = await photoRef.getDownloadURL();
-    return downloadURL;
-  } catch (error) {
-    console.error("Error al subir foto:", error);
-    throw error;
-  }
-}
-
-/* ===== MODAL RECORDATORIOS ===== */
-function openRemindersModal() {
-  remindersModal.style.display = "flex";
-  // Establecer fecha mínima como hoy
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('reminderDueDate').min = today;
-  loadReminders();
-}
-
-function closeRemindersModal() {
-  remindersModal.style.display = "none";
-  // Limpiar formulario
-  reminderForm.reset();
-}
-
-// Cerrar modal al hacer clic fuera del contenido
-remindersModal.addEventListener('click', function(e) {
-  if (e.target === remindersModal) {
-    closeRemindersModal();
-  }
-});
-
-cameraModal.addEventListener('click', function(e) {
-  if (e.target === cameraModal) {
-    closeCameraModal();
-  }
-});
-
-/* ===== FILTROS DE RECORDATORIOS ===== */
-function filterReminders(filterType) {
-  // Actualizar botones activos
-  const filterButtons = reminderFilters.querySelectorAll('.filter-btn');
-  filterButtons.forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
-  
-  currentReminderFilter = filterType;
-  renderReminders();
-}
-
-/* ===== LÓGICA DE RECORDATORIOS ===== */
-function loadReminders() {
-  // Cancelar listener anterior si existe
-  if (unsubscribeRemindersListener) {
-    unsubscribeRemindersListener();
-    unsubscribeRemindersListener = null;
-  }
-  
-  // Obtener recordatorios de ambos usuarios
-  const query = db.collection("recordatorios")
-    .orderBy("fecha", "desc");
-  
-  unsubscribeRemindersListener = query.onSnapshot((snapshot) => {
-    allReminders = [];
-    snapshot.forEach((doc) => {
-      const reminder = {
-        id: doc.id,
-        ...doc.data()
-      };
-      
-      // Convertir fechas si es necesario
-      if (reminder.fecha && reminder.fecha.toDate) {
-        reminder.fecha = reminder.fecha.toDate();
-      }
-      
-      if (reminder.fechaVencimiento && reminder.fechaVencimiento.toDate) {
-        reminder.fechaVencimiento = reminder.fechaVencimiento.toDate();
-      }
-      
-      allReminders.push(reminder);
-    });
-    
-    renderReminders();
-  }, (error) => {
-    console.error("Error en la consulta de recordatorios:", error);
-    showNotification("Error al cargar recordatorios", "error");
-  });
-}
-
-function getReminderStatus(reminder) {
-  if (!reminder.fechaVencimiento) {
-    return 'sinFecha';
-  }
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const dueDate = new Date(reminder.fechaVencimiento);
-  dueDate.setHours(0, 0, 0, 0);
-  
-  const diffTime = dueDate - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays < 0) {
-    return 'vencido';
-  } else if (diffDays <= 3) {
-    return 'proximo';
-  } else {
-    return 'normal';
-  }
-}
-
-function sortRemindersByCriticality(reminders) {
-  return reminders.sort((a, b) => {
-    // Primero: vencidos primero
-    const statusA = getReminderStatus(a);
-    const statusB = getReminderStatus(b);
-    
-    const priorityOrder = {
-      'vencido': 0,
-      'proximo': 1,
-      'normal': 2,
-      'sinFecha': 3
-    };
-    
-    if (priorityOrder[statusA] !== priorityOrder[statusB]) {
-      return priorityOrder[statusA] - priorityOrder[statusB];
-    }
-    
-    // Segundo: si ambos tienen fecha, más cercana primero
-    if (a.fechaVencimiento && b.fechaVencimiento) {
-      return a.fechaVencimiento - b.fechaVencimiento;
-    }
-    
-    // Tercero: los que tienen fecha antes que los que no
-    if (a.fechaVencimiento && !b.fechaVencimiento) {
-      return -1;
-    }
-    if (!a.fechaVencimiento && b.fechaVencimiento) {
-      return 1;
-    }
-    
-    // Cuarto: por fecha de creación (más recientes primero)
-    return b.fecha - a.fecha;
-  });
-}
-
-function renderReminders() {
-  remindersList.innerHTML = "";
-  
-  if (allReminders.length === 0) {
-    remindersList.innerHTML = `
-      <div class="empty-reminders">
-        <p>📝 No hay recordatorios aún</p>
-        <p style="font-size: 14px; margin-top: 10px;">¡Agrega tu primer recordatorio!</p>
-      </div>
-    `;
-    return;
-  }
-  
-  let filteredReminders = [...allReminders];
-  
-  // Aplicar filtro
-  switch(currentReminderFilter) {
-    case 'vencidos':
-      filteredReminders = filteredReminders.filter(r => getReminderStatus(r) === 'vencido');
-      break;
-    case 'proximos':
-      filteredReminders = filteredReminders.filter(r => getReminderStatus(r) === 'proximo');
-      break;
-    case 'sinFecha':
-      filteredReminders = filteredReminders.filter(r => getReminderStatus(r) === 'sinFecha');
-      break;
-    case 'criticos':
-      // Para "Más críticos" ordenamos por criticidad
-      filteredReminders = sortRemindersByCriticality(filteredReminders);
-      break;
-    case 'todos':
-      // Para "Todos" mostramos por fecha de creación
-      filteredReminders.sort((a, b) => b.fecha - a.fecha);
-      break;
-  }
-  
-  if (filteredReminders.length === 0) {
-    remindersList.innerHTML = `
-      <div class="empty-reminders">
-        <p>📝 No hay recordatorios con este filtro</p>
-        <p style="font-size: 14px; margin-top: 10px;">Intenta con otro filtro</p>
-      </div>
-    `;
-    return;
-  }
-  
-  // Renderizar recordatorios filtrados
-  filteredReminders.forEach((recordatorio) => {
-    const fechaCreacion = recordatorio.fecha;
-    const fechaVencimiento = recordatorio.fechaVencimiento;
-    
-    const fechaCreacionFormateada = fechaCreacion.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-    
-    const fechaVencimientoFormateada = fechaVencimiento ? 
-      fechaVencimiento.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      }) : 'Sin fecha límite';
-    
-    // Determinar estado
-    const status = getReminderStatus(recordatorio);
-    const statusClass = status === 'vencido' ? 'vencido' : 
-                       status === 'proximo' ? 'proximo' : 
-                       status === 'normal' ? 'normal' : 'normal';
-    
-    // Icono según el tipo
-    let icono = "📌";
-    switch(recordatorio.tipo) {
-      case "Casa": icono = "🏠"; break;
-      case "Estudio": icono = "📚"; break;
-      case "Trabajo": icono = "💼"; break;
-      case "Familia": icono = "👨‍👩‍👧‍👦"; break;
-      case "Viaje": icono = "✈️"; break;
-      case "Entretenimiento": icono = "🎬"; break;
-      case "Salud": icono = "🏥"; break;
-      case "Finanzas": icono = "💰"; break;
-      default: icono = "📌";
-    }
-    
-    // Calcular días restantes
-    let daysInfo = '';
-    if (fechaVencimiento) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dueDate = new Date(fechaVencimiento);
-      dueDate.setHours(0, 0, 0, 0);
-      const diffTime = dueDate - today;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays < 0) {
-        daysInfo = `Vencido hace ${Math.abs(diffDays)} día${Math.abs(diffDays) !== 1 ? 's' : ''}`;
-      } else if (diffDays === 0) {
-        daysInfo = "Vence hoy";
-      } else if (diffDays === 1) {
-        daysInfo = "Vence mañana";
-      } else {
-        daysInfo = `${diffDays} días restantes`;
-      }
-    }
-    
-    const reminderItem = document.createElement("div");
-    reminderItem.className = `reminder-item ${statusClass}`;
-    reminderItem.innerHTML = `
-      <div class="reminder-header">
-        <div>
-          <span class="reminder-type">${icono} ${recordatorio.tipo}</span>
-        </div>
-        <div class="reminder-dates">
-          <div class="reminder-date">Creado: ${fechaCreacionFormateada}</div>
-          <div class="reminder-due-date ${statusClass}">
-            ${fechaVencimiento ? `Vence: ${fechaVencimientoFormateada}` : 'Sin fecha límite'}
-            ${daysInfo ? `<br><small>${daysInfo}</small>` : ''}
-          </div>
-        </div>
-      </div>
-      <div class="reminder-text">${recordatorio.texto}</div>
-      <div class="reminder-footer">
-        <small style="color: #666;">Por: ${recordatorio.usuarioNombre}</small>
-        <button class="delete-reminder" onclick="deleteReminder('${recordatorio.id}')">Eliminar</button>
-      </div>
-    `;
-    
-    remindersList.appendChild(reminderItem);
-  });
-}
-
-async function deleteReminder(reminderId) {
-  if (confirm("¿Estás seguro de que quieres eliminar este recordatorio?")) {
-    try {
-      await db.collection("recordatorios").doc(reminderId).delete();
-      showNotification("✅ Recordatorio eliminado correctamente");
-    } catch (error) {
-      console.error("Error al eliminar recordatorio:", error);
-      showNotification("Error al eliminar recordatorio", "error");
-    }
-  }
-}
-
-/* ===== ELIMINACIÓN "BLANDA" DE MOVIMIENTOS ===== */
-async function toggleMovementActive(movimientoId, estaActivo) {
-  try {
-    if (estaActivo) {
-      // Marcar como eliminado
-      await db.collection("movimientos").doc(movimientoId).update({
-        activo: false,
-        eliminadoEn: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      showNotification("✅ Movimiento marcado como eliminado");
-    } else {
-      // Restaurar movimiento
-      await db.collection("movimientos").doc(movimientoId).update({
-        activo: true,
-        eliminadoEn: null
-      });
-      showNotification("✅ Movimiento restaurado");
-    }
-  } catch (error) {
-    console.error("Error al cambiar estado del movimiento:", error);
-    showNotification("Error al procesar el movimiento", "error");
-  }
-}
-
-/* ===== LÓGICA DE LA APLICACIÓN ===== */
+// ===== INICIALIZAR APLICACIÓN =====
 function initializeApp() {
-  /* ---------- CATEGORIAS ---------- */
+  // Configurar categorías
   const categoriasIngresos = {
     "Ingresos": ["Nómina", "Prima", "Cesantías", "Cadena"]
   };
@@ -1393,13 +1640,13 @@ function initializeApp() {
 
   const cat1 = document.getElementById("catNivel1");
   const cat2 = document.getElementById("catNivel2");
-
-  /* ---------- UI ---------- */
+  
+  // Configurar tipo inicial
   tipo = "Ingreso";
-
+  
   function cargarCategorias() {
-    cat1.innerHTML = '<option value="">Categoría principal</option>';
-    cat2.innerHTML = '<option value="">Subcategoría</option>';
+    cat1.innerHTML = '<option value="">Selecciona categoría principal</option>';
+    cat2.innerHTML = '<option value="">Selecciona subcategoría</option>';
 
     const origen = tipo === "Ingreso" ? categoriasIngresos : categoriasGastos;
     Object.keys(origen).forEach(c => {
@@ -1407,7 +1654,7 @@ function initializeApp() {
     });
 
     cat1.onchange = () => {
-      cat2.innerHTML = '<option value="">Subcategoría</option>';
+      cat2.innerHTML = '<option value="">Selecciona subcategoría</option>';
       if (origen[cat1.value]) {
         origen[cat1.value].forEach(s => {
           cat2.innerHTML += `<option value="${s}">${s}</option>`;
@@ -1416,12 +1663,12 @@ function initializeApp() {
     };
   }
 
+  // Configurar botones de tipo
   document.getElementById("btnIngreso").onclick = () => {
     tipo = "Ingreso";
     document.getElementById("btnIngreso").classList.add("active");
     document.getElementById("btnGasto").classList.remove("active");
-    // Ocultar botón de foto para ingresos
-    takePhotoBtn.style.display = "none";
+    document.getElementById("photoSection").style.display = "none";
     cargarCategorias();
   };
 
@@ -1429,36 +1676,27 @@ function initializeApp() {
     tipo = "Gasto";
     document.getElementById("btnGasto").classList.add("active");
     document.getElementById("btnIngreso").classList.remove("active");
-    // Mostrar botón de foto para gastos
-    takePhotoBtn.style.display = "block";
+    document.getElementById("photoSection").style.display = "block";
     cargarCategorias();
   };
 
-  document.getElementById("add100").onclick = () => {
-    const montoInput = document.getElementById("monto");
-    const currentValue = parseInt(montoInput.value) || 0;
-    montoInput.value = currentValue + 100000;
-  };
-
+  // Cargar categorías iniciales
   cargarCategorias();
 
-  /* ---------- REGISTRO DE MOVIMIENTOS ---------- */
+  // Configurar formulario
   document.getElementById("formulario").onsubmit = async (e) => {
     e.preventDefault();
 
-    // Verificar que el usuario esté autenticado
     if (!currentUser) {
       showNotification("Debes iniciar sesión para registrar movimientos", "error");
       return;
     }
 
-    // Obtener valores del formulario
     const monto = document.getElementById("monto").value;
     const catNivel1 = cat1.value;
     const catNivel2 = cat2.value;
     const observacion = document.getElementById("observacion").value;
 
-    // Validaciones
     if (!monto || monto <= 0) {
       showNotification("Ingresa un monto válido", "error");
       return;
@@ -1469,7 +1707,6 @@ function initializeApp() {
     }
 
     try {
-      // Preparar datos para guardar
       const movimientoData = {
         tipo,
         monto: Number(monto),
@@ -1479,35 +1716,35 @@ function initializeApp() {
         usuario: currentUser,
         usuarioNombre: USER_NAMES[currentUser],
         fecha: firebase.firestore.FieldValue.serverTimestamp(),
-        activo: true, // Por defecto, todos los movimientos están activos
+        activo: true,
         tieneFoto: false
       };
 
-      // Si hay foto, subirla a Firebase Storage
       if (currentPhotoBlob && tipo === "Gasto") {
-        const photoUrl = await uploadPhotoToStorage(currentPhotoBlob);
-        movimientoData.fotoURL = photoUrl;
+        const fileName = `facturas/${currentUser}/${Date.now()}.jpg`;
+        const storageRef = storage.ref();
+        const photoRef = storageRef.child(fileName);
+        
+        await photoRef.put(currentPhotoBlob);
+        const downloadURL = await photoRef.getDownloadURL();
+        
+        movimientoData.fotoURL = downloadURL;
         movimientoData.tieneFoto = true;
         
-        // Limpiar foto actual
         currentPhotoBlob = null;
-        photoPreview.style.display = "none";
-        photoPreview.src = "";
+        document.getElementById('photoPreview').style.display = 'none';
+        document.getElementById('photoPreview').src = '';
       }
 
-      // Guardar en Firestore
       await db.collection("movimientos").add(movimientoData);
 
-      // Mostrar notificación de éxito
-      showNotification(`✅ ${tipo} registrado correctamente: COP ${Number(monto).toLocaleString()}`);
+      showNotification(`${tipo} registrado correctamente: COP ${Number(monto).toLocaleString()}`, 'success');
 
-      // Limpiar formulario
       document.getElementById("formulario").reset();
       cargarCategorias();
       
-      // Ocultar botón de foto si no es gasto
       if (tipo !== "Gasto") {
-        takePhotoBtn.style.display = "none";
+        document.getElementById("photoSection").style.display = "none";
       }
 
     } catch (error) {
@@ -1516,62 +1753,7 @@ function initializeApp() {
     }
   };
 
-  /* ---------- REGISTRO DE RECORDATORIOS ---------- */
-  reminderForm.onsubmit = async (e) => {
-    e.preventDefault();
-
-    // Verificar que el usuario esté autenticado
-    if (!currentUser) {
-      showNotification("Debes iniciar sesión para registrar recordatorios", "error");
-      return;
-    }
-
-    // Obtener valores del formulario
-    const reminderType = document.getElementById("reminderType").value;
-    const reminderText = document.getElementById("reminderText").value;
-    const reminderDueDate = document.getElementById("reminderDueDate").value;
-
-    // Validaciones
-    if (!reminderType) {
-      showNotification("Selecciona un tipo de recordatorio", "error");
-      return;
-    }
-    if (!reminderText || reminderText.trim() === "") {
-      showNotification("Escribe el texto del recordatorio", "error");
-      return;
-    }
-
-    try {
-      // Preparar datos para guardar
-      const reminderData = {
-        tipo: reminderType,
-        texto: reminderText.trim(),
-        usuario: currentUser,
-        usuarioNombre: USER_NAMES[currentUser],
-        fecha: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      // Agregar fecha de vencimiento si se especificó
-      if (reminderDueDate) {
-        reminderData.fechaVencimiento = new Date(reminderDueDate);
-      }
-
-      // Guardar en Firestore
-      await db.collection("recordatorios").add(reminderData);
-
-      // Mostrar notificación de éxito
-      showNotification("✅ Observación guardada con éxito");
-
-      // Limpiar formulario
-      reminderForm.reset();
-
-    } catch (error) {
-      console.error("Error al guardar recordatorio:", error);
-      showNotification("Error al guardar el recordatorio: " + error.message, "error");
-    }
-  };
-
-  /* ---------- GRAFICO ---------- */
+  // Configurar gráfico
   const canvas = document.getElementById("grafico");
   chart = new Chart(canvas, {
     type: "line",
@@ -1600,6 +1782,7 @@ function initializeApp() {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'top',
@@ -1630,78 +1813,34 @@ function initializeApp() {
   loadReminders();
 }
 
+// ===== CARGAR DATOS =====
 function loadData() {
-  // Cancelar listener anterior si existe
   if (unsubscribeListener) {
     unsubscribeListener();
-    unsubscribeListener = null;
   }
 
   let query;
   
   if (isConjuntaView) {
-    // Visual conjunta: obtener datos de ambos usuarios
     query = db.collection("movimientos")
       .where("usuario", "in", ["ana", "camilo"])
       .orderBy("fecha", "desc");
   } else {
-    // Visual individual: obtener datos solo del usuario actual
     query = db.collection("movimientos")
       .where("usuario", "==", currentUser)
       .orderBy("fecha", "desc");
   }
 
   unsubscribeListener = query.onSnapshot((snapshot) => {
-    processMovementsData(snapshot);
+    const movimientos = [];
+    snapshot.forEach(doc => {
+      movimientos.push({ id: doc.id, ...doc.data() });
+    });
+    processMovementsArray(movimientos);
   }, (error) => {
-    console.error("Error en la consulta:", error);
-    
-    // Si hay error por índice, hacer consulta sin ordenar
-    if (error.code === 'failed-precondition') {
-      console.log("Haciendo consulta alternativa sin ordenamiento...");
-      
-      let alternativeQuery;
-      if (isConjuntaView) {
-        alternativeQuery = db.collection("movimientos")
-          .where("usuario", "in", ["ana", "camilo"]);
-      } else {
-        alternativeQuery = db.collection("movimientos")
-          .where("usuario", "==", currentUser);
-      }
-      
-      alternativeQuery.get()
-        .then((snapshot) => {
-          const movimientos = [];
-          snapshot.forEach(doc => {
-            movimientos.push({ id: doc.id, ...doc.data() });
-          });
-          
-          // Ordenar localmente por fecha descendente
-          movimientos.sort((a, b) => {
-            const fechaA = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha || 0);
-            const fechaB = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha || 0);
-            return fechaB - fechaA;
-          });
-          
-          // Procesar movimientos ordenados localmente
-          processMovementsArray(movimientos);
-        })
-        .catch(err => {
-          console.error("Error en consulta alternativa:", err);
-          showNotification("Error al cargar movimientos", "error");
-        });
-    } else {
-      showNotification("Error al cargar movimientos", "error");
-    }
+    console.error("Error en consulta:", error);
+    showNotification("Error al cargar movimientos", "error");
   });
-}
-
-function processMovementsData(snapshot) {
-  const movimientos = [];
-  snapshot.forEach(doc => {
-    movimientos.push({ id: doc.id, ...doc.data() });
-  });
-  processMovementsArray(movimientos);
 }
 
 function processMovementsArray(movimientos) {
@@ -1710,19 +1849,21 @@ function processMovementsArray(movimientos) {
   const map = {};
   const listaMovimientos = document.getElementById("listaMovimientos");
   
-  // Limpiar lista
   listaMovimientos.innerHTML = "";
 
-  // Si no hay movimientos
   if (movimientos.length === 0) {
-    listaMovimientos.innerHTML = "<li style='text-align: center; color: #666;'>No hay movimientos registrados aún</li>";
+    listaMovimientos.innerHTML = `
+      <div style="text-align: center; padding: 48px; color: var(--light-blue);">
+        <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+        <h3 style="margin-bottom: 8px;">No hay movimientos aún</h3>
+        <p>Comienza registrando tu primer ingreso o gasto</p>
+      </div>
+    `;
     
-    // Actualizar dashboard con ceros
     document.getElementById("totalIngresos").textContent = "COP 0";
     document.getElementById("totalGastos").textContent = "COP 0";
     document.getElementById("saldo").textContent = "COP 0";
     
-    // Limpiar gráfico
     chart.data.labels = [];
     chart.data.datasets[0].data = [];
     chart.data.datasets[1].data = [];
@@ -1730,7 +1871,6 @@ function processMovementsArray(movimientos) {
     return;
   }
 
-  // Procesar cada movimiento
   movimientos.forEach((movimiento) => {
     let fecha;
     if (movimiento.fecha && movimiento.fecha.toDate) {
@@ -1741,8 +1881,7 @@ function processMovementsArray(movimientos) {
       fecha = new Date();
     }
     
-    // Solo sumar al dashboard si el movimiento está activo
-    const estaActivo = movimiento.activo !== false; // Por defecto true
+    const estaActivo = movimiento.activo !== false;
     
     if (estaActivo) {
       const day = fecha.toLocaleDateString('es-ES', {
@@ -1751,12 +1890,10 @@ function processMovementsArray(movimientos) {
         year: 'numeric'
       });
 
-      // Inicializar el día en el mapa si no existe
       if (!map[day]) {
         map[day] = { i: 0, g: 0 };
       }
 
-      // Sumar según el tipo (solo si está activo)
       if (movimiento.tipo === "Ingreso") {
         ing += movimiento.monto;
         map[day].i += movimiento.monto;
@@ -1766,7 +1903,6 @@ function processMovementsArray(movimientos) {
       }
     }
 
-    // Formatear fecha para mostrar
     const fechaFormateada = fecha.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: 'short',
@@ -1775,96 +1911,48 @@ function processMovementsArray(movimientos) {
       minute: '2-digit'
     });
 
-    // Determinar icono según categoría
-    let icono = "💰";
-    if (movimiento.tipo === "Gasto") {
-      if (movimiento.categoriaNivel1 === "Servicios") icono = "💡";
-      else if (movimiento.categoriaNivel1 === "Mercado") icono = "🛒";
-      else if (movimiento.categoriaNivel1 === "Transporte") icono = "🚗";
-      else if (movimiento.categoriaNivel1 === "Salud") icono = "🏥";
-      else if (movimiento.categoriaNivel1 === "Educación") icono = "📚";
-      else if (movimiento.categoriaNivel1 === "Ocio") icono = "🎬";
-      else if (movimiento.categoriaNivel1 === "Finanzas") icono = "💳";
-      else icono = "📝";
-    } else {
-      icono = "💵";
-    }
-
-    // Color del usuario
-    const userColor = USER_COLORS[movimiento.usuario] || "#666";
-    const userBadgeStyle = movimiento.usuario === 'ana' ? 
-      "background: #e5f0ff; color: #007aff;" : 
-      "background: #ffe5e5; color: #ff3b30;";
-
-    // Crear elemento de lista
-    const li = document.createElement("li");
-    li.className = `${movimiento.tipo.toLowerCase()} ${!estaActivo ? 'movimiento-eliminado' : ''} ${movimiento.tieneFoto ? 'movimiento-has-photo' : ''}`;
-    
-    const montoClass = movimiento.tipo === 'Ingreso' ? '#34c759' : '#ff3b30';
-    const montoSign = movimiento.tipo === 'Gasto' ? '-' : '+';
+    const li = document.createElement("div");
+    li.className = `movement-item ${movimiento.tipo.toLowerCase()} ${!estaActivo ? 'movimiento-eliminado' : ''}`;
     
     li.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-        <span style="font-size: 20px;">${icono}</span>
-        <div style="flex: 1;">
-          <strong>${movimiento.categoriaNivel1} · ${movimiento.categoriaNivel2}</strong>
-          <span class="user-tag" style="${userBadgeStyle}">${movimiento.usuarioNombre}</span>
-          <br>
-          <span style="font-size: 18px; font-weight: bold; color: ${montoClass}">
-            ${montoSign} COP ${movimiento.monto.toLocaleString()}
-            ${!estaActivo ? ' <small style="color: #ff3b30;">(no contabilizado)</small>' : ''}
-          </span>
+      <div class="movement-header">
+        <div class="movement-info">
+          <h4>${movimiento.categoriaNivel1} · ${movimiento.categoriaNivel2}</h4>
+          <div class="movement-category">${movimiento.usuarioNombre}</div>
+        </div>
+        <div class="movement-amount ${movimiento.tipo.toLowerCase()}">
+          ${movimiento.tipo === 'Gasto' ? '-' : '+'} COP ${movimiento.monto.toLocaleString()}
         </div>
       </div>
-      <small>${fechaFormateada} · ${movimiento.observacion || "Sin observaciones"}</small>
-      
-      <div class="movement-actions">
-        ${estaActivo ? 
-          `<button class="delete-movement-btn" onclick="toggleMovementActive('${movimiento.id}', true)">
-            ❌ No contabilizar
-          </button>` : 
-          `<button class="restore-movement-btn" onclick="toggleMovementActive('${movimiento.id}', false)">
-            🔄 Restaurar
-          </button>`
-        }
-        ${movimiento.tieneFoto ? 
-          `<button class="view-photo-btn" onclick="openPhotoViewer('${movimiento.fotoURL}')">
-            📸 Ver factura
-          </button>` : 
-          ''
-        }
+      <div class="movement-details">
+        <div class="movement-meta">
+          <span class="movement-date">${fechaFormateada}</span>
+          <span class="movement-user">${movimiento.observacion || "Sin observaciones"}</span>
+        </div>
+        <div class="movement-actions">
+          ${estaActivo ? 
+            `<button class="action-icon-btn delete-btn" onclick="toggleMovementActive('${movimiento.id}', true)" title="Eliminar">🗑️</button>` : 
+            `<button class="action-icon-btn restore-btn" onclick="toggleMovementActive('${movimiento.id}', false)" title="Restaurar">↩️</button>`
+          }
+          ${movimiento.tieneFoto ? 
+            `<button class="action-icon-btn photo-btn-small" onclick="openPhotoViewer('${movimiento.fotoURL}')" title="Ver factura">📸</button>` : 
+            ''
+          }
+        </div>
       </div>
     `;
     
-    // Agregar a la lista
     listaMovimientos.appendChild(li);
   });
 
-  // Actualizar dashboard (solo con movimientos activos)
+  // Actualizar dashboard
   document.getElementById("totalIngresos").textContent = `COP ${ing.toLocaleString()}`;
   document.getElementById("totalGastos").textContent = `COP ${gas.toLocaleString()}`;
   const saldo = ing - gas;
   document.getElementById("saldo").textContent = `COP ${saldo.toLocaleString()}`;
   
-  // Actualizar color del saldo en el card
-  const saldoCard = document.querySelector('.card.saldo');
-  if (saldo < 0) {
-    saldoCard.style.background = 'linear-gradient(135deg, #ff3b30, #ff6b6b)';
-  } else {
-    saldoCard.style.background = 'linear-gradient(135deg, #007aff, #5ac8fa)';
-  }
-
-  // Actualizar título del gráfico según la vista
-  const chartTitle = isConjuntaView ? 
-    'Evolución Conjunta de Ingresos y Gastos' : 
-    `Evolución de Ingresos y Gastos - ${USER_NAMES[currentUser]}`;
-  
-  chart.options.plugins.title.text = chartTitle;
-
-  // Actualizar gráfico (solo con movimientos activos)
+  // Actualizar gráfico
   const days = Object.keys(map);
-  
-  // Ordenar días cronológicamente
   const sortedDays = days.sort((a, b) => {
     const [dayA, monthA, yearA] = a.split('/').map(Number);
     const [dayB, monthB, yearB] = b.split('/').map(Number);
@@ -1878,6 +1966,115 @@ function processMovementsArray(movimientos) {
   chart.data.datasets[1].data = sortedDays.map(day => map[day].g);
   chart.update();
 }
+
+// ===== FUNCIONES PARA RECORDATORIOS =====
+async function toggleMovementActive(movimientoId, estaActivo) {
+  try {
+    if (estaActivo) {
+      await db.collection("movimientos").doc(movimientoId).update({
+        activo: false,
+        eliminadoEn: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showNotification("Movimiento marcado como eliminado", 'success');
+    } else {
+      await db.collection("movimientos").doc(movimientoId).update({
+        activo: true,
+        eliminadoEn: null
+      });
+      showNotification("Movimiento restaurado", 'success');
+    }
+  } catch (error) {
+    console.error("Error al cambiar estado del movimiento:", error);
+    showNotification("Error al procesar el movimiento", "error");
+  }
+}
+
+function openRemindersModal() {
+  document.getElementById('remindersModal').style.display = 'flex';
+  document.getElementById('reminderDueDate').min = new Date().toISOString().split('T')[0];
+  loadReminders();
+}
+
+function closeRemindersModal() {
+  document.getElementById('remindersModal').style.display = 'none';
+  document.getElementById('reminderForm').reset();
+}
+
+// Event listeners para cerrar modales
+document.getElementById('remindersModal').addEventListener('click', function(e) {
+  if (e.target === this) closeRemindersModal();
+});
+
+document.getElementById('cameraModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCameraModal();
+});
+
+document.getElementById('photoViewer').addEventListener('click', function(e) {
+  if (e.target === this) closePhotoViewer();
+});
+
+// ===== FUNCIONES PARA FILTRAR RECORDATORIOS =====
+function filterReminders(filterType) {
+  const filterButtons = document.querySelectorAll('#reminderFilters .filter-btn');
+  filterButtons.forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  currentReminderFilter = filterType;
+  // renderReminders(); // Esta función se implementaría si se completa la funcionalidad de recordatorios
+}
+
+function loadReminders() {
+  // Función para cargar recordatorios desde Firebase
+  // Se implementaría si se completa la funcionalidad de recordatorios
+  console.log("Cargando recordatorios...");
+}
+
+// Configurar formulario de recordatorios
+document.getElementById('reminderForm').onsubmit = async (e) => {
+  e.preventDefault();
+
+  if (!currentUser) {
+    showNotification("Debes iniciar sesión para registrar recordatorios", "error");
+    return;
+  }
+
+  const reminderType = document.getElementById('reminderType').value;
+  const reminderText = document.getElementById('reminderText').value;
+  const reminderDueDate = document.getElementById('reminderDueDate').value;
+
+  if (!reminderType) {
+    showNotification("Selecciona un tipo de recordatorio", "error");
+    return;
+  }
+  if (!reminderText || reminderText.trim() === "") {
+    showNotification("Escribe el texto del recordatorio", "error");
+    return;
+  }
+
+  try {
+    const reminderData = {
+      tipo: reminderType,
+      texto: reminderText.trim(),
+      usuario: currentUser,
+      usuarioNombre: USER_NAMES[currentUser],
+      fecha: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (reminderDueDate) {
+      reminderData.fechaVencimiento = new Date(reminderDueDate);
+    }
+
+    await db.collection("recordatorios").add(reminderData);
+
+    showNotification("Recordatorio guardado con éxito", 'success');
+
+    document.getElementById('reminderForm').reset();
+
+  } catch (error) {
+    console.error("Error al guardar recordatorio:", error);
+    showNotification("Error al guardar el recordatorio: " + error.message, "error");
+  }
+};
 </script>
 </body>
 </html>
